@@ -1,0 +1,26 @@
+# ClipFlow Server — .env template
+# Place at: ~/Downloads/TikTok Clip Machine/.env
+# Fill in all values before starting the server.
+
+# ── AI Services ───────────────────────────────────────────────────────────────
+
+# Anthropic Claude (viral title generation)
+ANTHROPIC_API_KEY=sk-ant-...
+
+# OpenAI Whisper (audio transcription)
+OPENAI_API_KEY=sk-proj-...
+
+# ── HeyGen (Spanish dubbing + lip sync) ───────────────────────────────────────
+HEYGEN_API_KEY=your_heygen_api_key
+
+# ── Server ────────────────────────────────────────────────────────────────────
+PORT=4000
+
+# Your Cloudflare tunnel public domain (set after tunnel setup)
+# The watcher uses this to build public video URLs for Postiz
+PUBLIC_URL=https://clips.yourdomain.com
+
+# ── Optional ──────────────────────────────────────────────────────────────────
+
+# yt-dlp cookies for age-restricted YouTube videos
+# YTDLP_COOKIES=/path/to/cookies.txt

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  TEMPLATE for channel watchers.
+  The deploy_watchers.py script generates the actual plist files automatically.
+  Replace CHANNEL_SLUG, YOUR_USERNAME, HOUR, and MINUTE as needed.
+
+  Channel schedule (ET → UTC, adjust for winter EST +5):
+    karltondennis  → 14:00 UTC (9:00 AM ET)
+    nischa         → 14:30 UTC (9:30 AM ET)
+    humphrey       → 15:00 UTC (10:00 AM ET)
+    graham_stephan → 15:30 UTC (10:30 AM ET)
+    ramsey         → 16:00 UTC (11:00 AM ET)
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ruben.clipflow-watcher-CHANNEL_SLUG</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/node</string>
+        <string>/Users/YOUR_USERNAME/.openclaw/workspace/clipflow_watcher_CHANNEL_SLUG/check_channel.js</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/YOUR_USERNAME/.openclaw/workspace/clipflow_watcher_CHANNEL_SLUG</string>
+
+    <!-- Daily at HH:MM UTC -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>HOUR</integer>
+        <key>Minute</key>
+        <integer>MINUTE</integer>
+    </dict>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/clipflow_watcher_CHANNEL_SLUG.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/clipflow_watcher_CHANNEL_SLUG.log</string>
+</dict>
+</plist>

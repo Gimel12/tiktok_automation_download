@@ -1,0 +1,13 @@
+{
+  "name": "clipflow-watcher",
+  "version": "1.0.0",
+  "description": "Daily watcher: checks YouTube channel for new shorts and auto-dubs via ClipFlow",
+  "main": "check_channel.js",
+  "scripts": {
+    "start": "node check_channel.js",
+    "test": "node test_single.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
+  }
+}

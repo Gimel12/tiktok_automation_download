@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment files — NEVER commit real keys
+.env
+*.env
+
+# Keep .env.example files
+!.env.example
+
+# Watcher state (video seen lists — machine-specific)
+state.json
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+/tmp/
+
+# Cloudflare tunnel credentials (contain private keys)
+*.json
+!package.json
+!package-lock.json
+
+# Python cache
+__pycache__/
+*.pyc
