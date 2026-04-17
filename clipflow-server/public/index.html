@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ClipFlow — TikTok Clip Machine</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090f;
+  --sidebar:#0e0e17;
+  --card:#13131f;
+  --card2:#1a1a28;
+  --border:#ffffff0f;
+  --border2:#ffffff18;
+  --blue:#3b82f6;
+  --blue-dim:#3b82f615;
+  --blue-hover:#2563eb;
+  --green:#22c55e;
+  --green-dim:#22c55e15;
+  --red:#ef4444;
+  --red-dim:#ef444415;
+  --yellow:#f59e0b;
+  --purple:#8b5cf6;
+  --t1:#f8fafc;
+  --t2:#94a3b8;
+  --t3:#475569;
+  --rx:12px;
+  --rs:8px;
+  --sidebar-w:240px;
+}
+html.light{
+  --bg:#f0f2f7;
+  --sidebar:#ffffff;
+  --card:#ffffff;
+  --card2:#f0f2f7;
+  --border:#e2e8f0;
+  --border2:#cbd5e1;
+  --blue:#2563eb;
+  --blue-dim:#2563eb12;
+  --blue-hover:#1d4ed8;
+  --green:#16a34a;
+  --green-dim:#16a34a12;
+  --red:#dc2626;
+  --red-dim:#dc262612;
+  --yellow:#d97706;
+  --purple:#7c3aed;
+  --t1:#0f172a;
+  --t2:#475569;
+  --t3:#94a3b8;
+}
+/* light mode overrides */
+html.light .sidebar{box-shadow:1px 0 0 var(--border)}
+html.light .topbar{box-shadow:0 1px 0 var(--border)}
+html.light .progress-fill{background:linear-gradient(90deg,var(--blue),var(--purple))}
+html.light .dub-select option,html.light .browse-sort option{background:#f0f2f7;color:#0f172a}
+html.light #browse-panel{background:rgba(240,242,247,.92)}
+html.light .browse-inner .browse-video-card{background:var(--card);border-color:var(--border)}
+html.light video{background:#e2e8f0}
+html.light .url-area::placeholder{color:var(--t3)}
+html.light .modal{background:rgba(15,23,42,.5)}
+html.light #toast{box-shadow:0 8px 30px rgba(0,0,0,.12)}
+
+/* theme toggle button */
+.btn-theme{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--border2);background:var(--card2);color:var(--t2);font-size:1rem;transition:all .2s;flex-shrink:0}
+.btn-theme:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-dim)}
+html,body{height:100%;background:var(--bg);color:var(--t1);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{cursor:pointer;font-family:inherit;font-size:inherit;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:inherit;outline:none;color:inherit}
+a{color:inherit;text-decoration:none}
+video{display:block;width:100%}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;padding:0}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.sidebar-logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sidebar-logo-name{font-size:.95rem;font-weight:800;letter-spacing:-.02em}
+.sidebar-logo-tag{font-size:.65rem;color:var(--t3);font-weight:500;margin-top:1px}
+.sidebar-nav{padding:12px 10px;flex:1;display:flex;flex-direction:column;gap:2px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);color:var(--t2);font-weight:500;font-size:.82rem;transition:all .15s;cursor:pointer}
+.nav-item:hover{background:var(--card2);color:var(--t1)}
+.nav-item.active{background:var(--blue-dim);color:var(--blue)}
+.nav-icon{width:16px;height:16px;opacity:.8;flex-shrink:0}
+.sidebar-section-label{font-size:.65rem;font-weight:700;color:var(--t3);letter-spacing:.08em;padding:12px 10px 4px;text-transform:uppercase}
+.sidebar-bottom{padding:14px;border-top:1px solid var(--border)}
+.sidebar-user{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs)}
+.sidebar-user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;flex-shrink:0}
+.sidebar-user-info{flex:1;min-width:0}
+.sidebar-user-email{font-size:.72rem;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-user-plan{font-size:.65rem;color:var(--blue);font-weight:600}
+.btn-logout{font-size:.72rem;color:var(--t3);padding:4px 8px;border-radius:6px;transition:color .15s}
+.btn-logout:hover{color:var(--red)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:50}
+.topbar-title{font-size:1rem;font-weight:700;color:var(--t1)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.credit-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--card2);border:1px solid var(--border2);border-radius:20px;font-size:.78rem;font-weight:600;color:var(--t1)}
+.credit-chip svg{color:var(--blue)}
+.btn-upgrade{padding:6px 14px;background:var(--blue);color:#fff;border-radius:20px;font-size:.78rem;font-weight:700;transition:background .15s}
+.btn-upgrade:hover{background:var(--blue-hover)}
+.btn-login-top{padding:6px 14px;border:1px solid var(--border2);border-radius:20px;font-size:.78rem;font-weight:600;color:var(--t2);transition:all .15s}
+.btn-login-top:hover{border-color:var(--blue);color:var(--blue)}
+.sse-dot{width:7px;height:7px;border-radius:50%;background:var(--t3);transition:all .3s;flex-shrink:0}
+.sse-dot.connected{background:var(--green);box-shadow:0 0 8px var(--green)}
+.content{padding:24px 28px;display:flex;flex-direction:column;gap:20px;flex:1}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--rx);overflow:hidden}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.card-title{font-size:.85rem;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:8px}
+.card-title-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.card-body{padding:20px}
+
+/* ── JOBS SECTION ── */
+#jobs-section{display:block}
+.jobs-empty{padding:40px 20px;text-align:center}
+.jobs-empty-icon{font-size:2.5rem;margin-bottom:12px;opacity:.4}
+.jobs-empty-text{font-size:.85rem;color:var(--t3);font-weight:500}
+.jobs-meta{display:flex;align-items:center;gap:8px}
+.jobs-count-badge{font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--card2);border:1px solid var(--border2);color:var(--t2)}
+#jobs-list{display:flex;flex-direction:column;gap:12px;padding:16px 20px}
+
+/* JOB CARD */
+.job-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--rx);overflow:hidden;transition:border-color .2s}
+.job-card:hover{border-color:var(--border2)}
+.job-card-header{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.job-card-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.job-card-icon.queued{background:rgba(245,158,11,.12)}
+.job-card-icon.running{background:rgba(59,130,246,.12)}
+.job-card-icon.done{background:rgba(34,197,94,.12)}
+.job-card-icon.error{background:rgba(239,68,68,.12)}
+.job-card-meta{flex:1;min-width:0}
+.job-title{font-size:.82rem;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.job-date{font-size:.7rem;color:var(--t3);margin-top:2px}
+.job-card-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:.68rem;font-weight:700;letter-spacing:.02em}
+.badge-queued{background:rgba(245,158,11,.12);color:var(--yellow);border:1px solid rgba(245,158,11,.2)}
+.badge-running{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+.badge-done{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.badge-error{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.btn-icon-del{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:.75rem;transition:all .15s}
+.btn-icon-del:hover{background:var(--red-dim);color:var(--red)}
+
+/* PROGRESS */
+.job-progress-wrap{padding:0 16px 14px}
+.progress-label-row{display:flex;justify-content:space-between;font-size:.72rem;color:var(--t2);margin-bottom:6px;font-weight:500}
+.progress-track{height:4px;background:var(--border2);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:4px;transition:width .4s ease}
+.progress-fill.anim{background-size:200% 100%;animation:shimmer 1.5s linear infinite;background:linear-gradient(90deg,var(--blue),var(--purple),var(--blue))}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.steps-row{display:flex;flex-wrap:wrap;gap:5px;padding:0 16px 14px}
+.step-chip{font-size:.65rem;font-weight:600;padding:3px 8px;border-radius:20px;background:var(--card);border:1px solid var(--border);color:var(--t3)}
+.step-chip.done{background:var(--green-dim);border-color:rgba(34,197,94,.25);color:var(--green)}
+.step-chip.active{background:var(--blue-dim);border-color:rgba(59,130,246,.3);color:var(--blue);animation:chip-pulse 1.4s ease-in-out infinite}
+@keyframes chip-pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.job-queued-msg{padding:10px 16px 14px;font-size:.78rem;color:var(--t3)}
+.job-error-msg{margin:0 16px 14px;padding:10px 14px;background:var(--red-dim);border:1px solid rgba(239,68,68,.2);border-radius:var(--rs);font-size:.78rem;color:var(--red)}
+
+/* ── CLIPS — NEW PRO LAYOUT ── */
+.clips-section{border-top:1px solid var(--border)}
+.clips-section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px}
+.clips-section-title{font-size:.8rem;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:7px}
+.btn-dl-all{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--card2);border:1px solid var(--border2);border-radius:20px;color:var(--t2);font-size:.75rem;font-weight:600;transition:all .15s}
+.btn-dl-all:hover{border-color:var(--blue);color:var(--blue)}
+
+/* Horizontal scroll strip of clip cards */
+.clips-strip{display:flex;gap:16px;padding:0 20px 20px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.clips-strip::-webkit-scrollbar{height:4px}
+.clips-strip::-webkit-scrollbar-track{background:transparent}
+.clips-strip::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* Each clip = vertical card (9:16 style) */
+.clip-card{flex:0 0 220px;scroll-snap-align:start;background:var(--card2);border:1px solid var(--border);border-radius:var(--rx);overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s;position:relative}
+.clip-card:hover{border-color:var(--border2)}
+
+/* Video container — 9:16 */
+.clip-video-wrap{position:relative;background:#000;aspect-ratio:9/16;width:100%;overflow:hidden;flex-shrink:0}
+.clip-video-wrap video{width:100%;height:100%;object-fit:cover}
+
+/* Overlay badges on video */
+.clip-badges{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;pointer-events:none;z-index:2}
+.clip-dur-badge{font-size:.65rem;font-weight:800;padding:3px 7px;background:rgba(0,0,0,.7);color:#fff;border-radius:6px;backdrop-filter:blur(4px)}
+.clip-score-badge{font-size:.65rem;font-weight:800;padding:3px 7px;background:rgba(0,0,0,.7);color:var(--yellow);border-radius:6px;backdrop-filter:blur(4px)}
+
+/* ES badge ribbon */
+.clip-es-ribbon{position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent);display:flex;align-items:center;gap:5px;font-size:.65rem;font-weight:700;color:#fff}
+
+/* Clip info panel below video */
+.clip-info{padding:12px;display:flex;flex-direction:column;gap:8px;flex:1}
+
+/* Titles */
+.clip-titles-label{font-size:.62rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.clip-title-pill{display:flex;align-items:flex-start;gap:6px;padding:7px 9px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);font-size:.72rem;color:var(--t2);cursor:pointer;transition:all .15s;line-height:1.35;text-align:left;width:100%}
+.clip-title-pill:hover{border-color:var(--blue);color:var(--t1);background:var(--blue-dim)}
+.clip-title-pill.copied{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+
+/* Action row */
+.clip-actions{display:flex;gap:6px;padding:0 12px 12px;flex-wrap:wrap}
+.btn-dl-orig,.btn-dl-es{display:flex;align-items:center;gap:5px;flex:1;justify-content:center;padding:7px 6px;border-radius:var(--rs);font-size:.72rem;font-weight:600;transition:all .15s;border:1px solid var(--border2);color:var(--t2);white-space:nowrap}
+.btn-dl-orig:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-dim)}
+.btn-dl-es{border-color:rgba(139,92,246,.25);color:var(--purple)}
+.btn-dl-es:hover{background:rgba(139,92,246,.1);border-color:var(--purple)}
+.btn-tiktok-publish{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px;background:linear-gradient(135deg,#0d0d0d,#1f1f1f);border:1px solid #3a3a3a;border-radius:var(--rs);font-size:.75rem;font-weight:700;color:#fff;transition:all .18s;margin:0 12px 12px;box-sizing:border-box;width:calc(100% - 24px)}
+.btn-tiktok-publish:hover{border-color:#ff004f88;box-shadow:0 0 14px rgba(255,0,79,.18);background:linear-gradient(135deg,#1a0008,#2a000f)}
+html.light .btn-tiktok-publish{background:linear-gradient(135deg,#111,#2a2a2a)}
+.coming-soon-pill{font-size:.6rem;padding:2px 6px;background:#ff004f22;border:1px solid #ff004f44;border-radius:10px;color:#ff6b8a}
+
+/* Video toggle tabs (original / ES) */
+.clip-video-tabs{display:flex;padding:10px 12px 0;gap:4px}
+.clip-vtab{flex:1;padding:5px;border-radius:6px;font-size:.7rem;font-weight:700;text-align:center;border:1px solid var(--border);color:var(--t3);background:var(--card);transition:all .15s;cursor:pointer}
+.clip-vtab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.clip-vtab.es.active{background:var(--purple);border-color:var(--purple);color:#fff}
+.clip-vtab:disabled{opacity:.35;cursor:not-allowed}
+
+/* Dubbed badge on thumbnail */
+.clip-es-badge{position:absolute;bottom:8px;right:8px;background:var(--purple);color:#fff;font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:20px;z-index:2}
+
+/* Step chips — scrollable */
+.steps-row{display:flex;gap:5px;padding:0 16px 14px;overflow-x:auto;flex-wrap:nowrap}
+.steps-row::-webkit-scrollbar{display:none}
+
+/* PUBLISH MODAL */
+.pub-modal-box{max-width:480px}
+.pub-title-option{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--card2);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .15s;margin-bottom:7px}
+.pub-title-option:hover{border-color:rgba(59,130,246,.4);background:var(--blue-dim)}
+.pub-title-option.selected{border-color:var(--blue);background:var(--blue-dim)}
+.pub-title-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s}
+.pub-title-option.selected .pub-title-radio{border-color:var(--blue);background:var(--blue)}
+.pub-title-option.selected .pub-title-radio::after{content:'';display:block;width:6px;height:6px;border-radius:50%;background:#fff}
+.pub-title-text{font-size:.82rem;color:var(--t1);line-height:1.45;font-weight:500}
+.pub-caption-preview{background:var(--card2);border:1px solid var(--border2);border-radius:var(--rs);padding:10px 12px;font-size:.78rem;color:var(--t2);line-height:1.6;white-space:pre-wrap;min-height:80px;max-height:160px;overflow-y:auto;word-break:break-word}
+.pub-schedule-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pub-date-input,.pub-time-select{background:var(--card2);border:1px solid var(--border2);color:var(--t1);padding:8px 10px;border-radius:var(--rs);font-size:.8rem;flex:1;min-width:120px}
+.pub-date-input:focus,.pub-time-select:focus{border-color:var(--blue)}
+.pub-time-select option{background:var(--card)}
+.btn-publish-now{width:100%;padding:11px;background:linear-gradient(135deg,#010101,#222);border:1px solid #ff004f55;border-radius:var(--rs);font-size:.88rem;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-top:4px}
+.btn-publish-now:hover:not(:disabled){border-color:#ff004f;box-shadow:0 0 16px rgba(255,0,79,.25)}
+.btn-publish-now:disabled{opacity:.45;cursor:not-allowed}
+.pub-hashtags{font-size:.72rem;color:var(--t3);padding:6px 0 2px;line-height:1.7}
+.pub-status-msg{font-size:.8rem;min-height:22px;margin-top:6px;text-align:center}
+
+/* ── INPUT SECTION ── */
+.input-section{display:flex;flex-direction:column;gap:0}
+.input-section .card-body{display:flex;flex-direction:column;gap:16px}
+.field-label{font-size:.72rem;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;display:block}
+.url-area{width:100%;background:var(--card2);border:1px solid var(--border2);color:var(--t1);padding:12px 14px;border-radius:var(--rs);font-size:.85rem;resize:vertical;min-height:80px;transition:border-color .2s;line-height:1.6}
+.url-area:focus{border-color:var(--blue)}
+.url-area::placeholder{color:var(--t3)}
+
+/* QUEUE PREVIEW */
+.queue-preview-label{display:flex;align-items:center;justify-content:space-between;font-size:.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.btn-clear-queue{font-size:.72rem;color:var(--t3);padding:2px 6px;border-radius:4px;transition:color .15s}
+.btn-clear-queue:hover{color:var(--red)}
+.queue-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--blue-dim);border:1px solid rgba(59,130,246,.15);border-radius:var(--rs);margin-bottom:5px}
+.queue-item-num{width:20px;height:20px;border-radius:50%;background:rgba(59,130,246,.2);color:var(--blue);font-size:.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.queue-item-url{font-size:.73rem;color:var(--t2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.queue-item-del{color:var(--t3);font-size:.75rem;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:color .15s;flex-shrink:0}
+.queue-item-del:hover{color:var(--red)}
+
+/* DUB SETTINGS */
+.dub-toggle-row{display:flex;align-items:center;gap:8px;padding:12px 0 10px;border-top:1px solid var(--border);cursor:pointer;user-select:none}
+.dub-toggle-label{font-size:.82rem;font-weight:600;flex:1;color:var(--t2)}
+.dub-arrow{color:var(--t3);font-size:.75rem;transition:transform .2s}
+.dub-settings.open .dub-arrow{transform:rotate(180deg)}
+.dub-settings:not(.open) .dub-body{display:none}
+.dub-body{display:flex;flex-direction:column;gap:12px;padding-bottom:4px}
+.dub-select{width:100%;background:var(--card2);border:1px solid var(--border2);color:var(--t1);padding:9px 12px;border-radius:var(--rs);font-size:.82rem;appearance:none;cursor:pointer;transition:border-color .2s}
+.dub-select:focus{border-color:var(--blue)}
+.dub-select option{background:#1a1a28}
+
+/* OPT GRID */
+.opt-grid{display:flex;flex-direction:column;gap:6px}
+.opt-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:var(--rs)}
+.opt-row-highlight{border-color:rgba(59,130,246,.2);background:var(--blue-dim)}
+.opt-info{display:flex;flex-direction:column;gap:1px}
+.opt-name{font-size:.8rem;font-weight:600;color:var(--t1)}
+.opt-desc{font-size:.68rem;color:var(--t3)}
+.opt-btns{display:flex;gap:4px;flex-shrink:0}
+.opt-btn{padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:700;border:1px solid var(--border2);background:var(--card);color:var(--t3);transition:all .15s}
+.opt-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* SPEAKERS */
+.spk-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.spk-label{font-size:.75rem;font-weight:600;color:var(--t3);margin-right:2px}
+.spk-btn{padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:700;border:1px solid var(--border2);background:var(--card);color:var(--t3);transition:all .15s}
+.spk-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* PREVIEW BAR */
+.dub-preview-bar{padding:8px 12px;background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);font-size:.72rem;color:var(--t3)}
+
+/* PROCESS BTN */
+.btn-process{width:100%;padding:13px;background:var(--blue);color:#fff;border-radius:var(--rx);font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.btn-process:hover:not(:disabled){background:var(--blue-hover);transform:translateY(-1px)}
+.btn-process:disabled{opacity:.5;cursor:not-allowed;transform:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── CREATORS ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.section-title{font-size:.85rem;font-weight:700;color:var(--t1)}
+.btn-add-creator{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--card2);border:1px solid var(--border2);border-radius:var(--rs);font-size:.75rem;font-weight:600;color:var(--t2);transition:all .15s}
+.btn-add-creator:hover{border-color:var(--blue);color:var(--blue)}
+.creators-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:16px}
+.creators-empty{padding:30px;text-align:center;color:var(--t3);font-size:.82rem;grid-column:1/-1}
+.creator-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--rx);padding:14px;transition:border-color .2s}
+.creator-card:hover{border-color:var(--border2)}
+.creator-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.creator-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#fff;flex-shrink:0}
+.creator-info{flex:1;min-width:0}
+.creator-name{font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.creator-url{font-size:.68rem;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.creator-del{color:var(--t3);font-size:.7rem;width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.creator-del:hover{background:var(--red-dim);color:var(--red)}
+.creator-btns{display:flex;gap:6px}
+.btn-fetch-vids,.btn-browse-all{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;border-radius:var(--rs);font-size:.72rem;font-weight:700;transition:all .15s;border:1px solid var(--border2);color:var(--t2)}
+.btn-fetch-vids:hover{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+.btn-browse-all:hover{border-color:var(--yellow);color:var(--yellow);background:rgba(245,158,11,.08)}
+.btn-fetch-vids:disabled,.btn-browse-all:disabled{opacity:.4;cursor:not-allowed}
+
+/* CREATOR VIDEOS PANEL */
+.creator-videos-panel{display:none;padding:16px}
+.cvp-inner{background:var(--card2);border:1px solid var(--border);border-radius:var(--rx);overflow:hidden}
+.cvp-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+.cvp-title{font-size:.82rem;font-weight:700}.cvp-close{font-size:.75rem;color:var(--t3);padding:4px 10px;border-radius:6px;transition:all .15s}
+.cvp-close:hover{color:var(--red)}
+.cvp-tabs{display:flex;gap:4px;padding:10px 16px;border-bottom:1px solid var(--border)}
+.cvp-tab{padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;color:var(--t3);border:1px solid transparent;transition:all .15s}
+.cvp-tab.active{background:var(--blue-dim);border-color:rgba(59,130,246,.2);color:var(--blue)}
+.video-list{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+.video-item{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border)}
+.video-item:hover{background:var(--card)}
+.video-item.selected{background:var(--blue-dim)}
+.video-thumb{width:60px;height:34px;object-fit:cover;border-radius:4px;flex-shrink:0}
+.video-thumb-short{width:22px;height:38px}
+.video-info{flex:1;min-width:0}
+.video-title{font-size:.75rem;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
+.video-dur{font-size:.65rem;color:var(--t3);margin-top:2px}
+.video-check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:var(--blue);flex-shrink:0;transition:all .15s}
+.video-item.selected .video-check{background:var(--blue);border-color:var(--blue);color:#fff}
+.cvp-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border)}
+.cvp-selected-count{font-size:.75rem;color:var(--t3)}
+.btn-add-queue{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--green);color:#fff;border-radius:var(--rs);font-size:.78rem;font-weight:700;transition:all .15s}
+.btn-add-queue:hover:not(:disabled){background:#16a34a}
+.btn-add-queue:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── BROWSE PANEL ── */
+#browse-panel{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);flex-direction:column}
+#browse-panel.open,#browse-panel[style*="flex"]{display:flex}
+.browse-inner{max-width:1100px;width:100%;margin:0 auto;display:flex;flex-direction:column;height:100%;padding:20px}
+.browse-header{display:flex;align-items:center;gap:14px;padding:14px 0 18px;flex-wrap:wrap}
+.browse-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;flex-shrink:0}
+.browse-creator-info{flex:1;min-width:0}
+.browse-creator-name{font-size:1rem;font-weight:800}
+.browse-creator-url{font-size:.72rem;color:var(--t3);margin-top:2px}
+.browse-close{padding:7px 16px;background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);font-size:.8rem;font-weight:600;color:var(--t2);transition:all .15s}
+.browse-close:hover{border-color:var(--red);color:var(--red)}
+.browse-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 0 14px;border-bottom:1px solid var(--border)}
+.browse-tabs{display:flex;gap:4px;padding:3px;background:var(--card);border-radius:var(--rs)}
+.btab{padding:5px 14px;border-radius:6px;font-size:.78rem;font-weight:600;color:var(--t3);transition:all .15s}
+.btab.active{background:var(--blue);color:#fff}
+.browse-search{flex:1;min-width:160px;background:var(--card2);border:1px solid var(--border2);color:var(--t1);padding:7px 12px;border-radius:var(--rs);font-size:.82rem}
+.browse-search:focus{border-color:var(--blue)}
+.browse-sort{background:var(--card2);border:1px solid var(--border2);color:var(--t1);padding:7px 10px;border-radius:var(--rs);font-size:.78rem;cursor:pointer}
+.browse-sort option{background:#1a1a28}
+.browse-selall{display:flex;align-items:center;gap:6px;color:var(--t2);font-size:.78rem;cursor:pointer}
+.browse-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px 0 4px}
+.browse-video-card{border-radius:var(--rx);background:var(--card2);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:all .2s}
+.browse-video-card:hover{border-color:rgba(59,130,246,.3);transform:translateY(-2px)}
+.browse-video-card.selected{border-color:var(--blue);background:var(--blue-dim)}
+.browse-thumb-wrap{position:relative;aspect-ratio:16/9;overflow:hidden;background:#000}
+.browse-thumb-wrap.short-thumb{aspect-ratio:9/16}
+.browse-thumb{width:100%;height:100%;object-fit:cover}
+.browse-dur-badge{position:absolute;bottom:5px;right:5px;background:rgba(0,0,0,.75);color:#fff;font-size:.62rem;font-weight:700;padding:2px 6px;border-radius:4px}
+.browse-check-badge{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:900;transition:all .15s}
+.browse-video-card.selected .browse-check-badge{background:var(--blue);border-color:var(--blue)}
+.browse-card-body{padding:8px}
+.browse-card-title{font-size:.75rem;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.browse-card-meta{font-size:.65rem;color:var(--t3);margin-top:3px}
+.browse-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 0 0;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.browse-sel-count{font-size:.82rem;color:var(--t2)}
+.btn-browse-queue{display:flex;align-items:center;gap:7px;padding:9px 20px;background:var(--blue);color:#fff;border-radius:var(--rs);font-size:.82rem;font-weight:700;transition:all .2s}
+.btn-browse-queue:hover:not(:disabled){background:var(--blue-hover)}
+.btn-browse-queue:disabled{opacity:.35;cursor:not-allowed}
+#browse-load-more{display:none;text-align:center;padding:8px 0}
+.btn-load-more{padding:8px 20px;background:var(--card2);border:1px solid var(--border2);color:var(--t2);border-radius:var(--rs);font-size:.8rem;font-weight:600;transition:all .15s}
+.btn-load-more:hover{border-color:var(--blue);color:var(--blue)}
+.browse-loading{text-align:center;padding:40px;color:var(--t3);grid-column:1/-1;font-size:.85rem}
+
+/* ── MODALS ── */
+.modal{display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
+.modal-box{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:28px;width:100%;max-width:440px;position:relative}
+.modal-title{font-size:1.1rem;font-weight:800;margin-bottom:6px}
+.modal-sub{font-size:.82rem;color:var(--t2);margin-bottom:22px;line-height:1.5}
+.modal-input{width:100%;background:var(--card2);border:1px solid var(--border2);color:var(--t1);padding:11px 14px;border-radius:var(--rs);font-size:.88rem;transition:border-color .2s;margin-bottom:14px}
+.modal-input:focus{border-color:var(--blue)}
+.btn-modal-primary{width:100%;padding:11px;background:var(--blue);color:#fff;border-radius:var(--rs);font-size:.88rem;font-weight:700;transition:background .15s}
+.btn-modal-primary:hover{background:var(--blue-hover)}
+.login-msg{margin-top:12px;font-size:.8rem;min-height:20px}
+.modal-close{position:absolute;top:14px;right:14px;color:var(--t3);font-size:.8rem;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.modal-close:hover{background:var(--card2);color:var(--t1)}
+
+/* PRICING MODAL */
+.pricing-modal-box{max-width:560px}
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.plan-card{padding:16px;background:var(--card2);border:1px solid var(--border);border-radius:var(--rx);cursor:pointer;transition:all .2s;position:relative}
+.plan-card:hover{border-color:var(--blue)}
+.plan-card.popular{border-color:var(--blue)}
+.popular-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:.62rem;font-weight:800;padding:2px 10px;border-radius:20px;white-space:nowrap}
+.plan-icon{font-size:1.4rem;margin-bottom:8px}
+.plan-name{font-size:.82rem;font-weight:800;margin-bottom:4px}
+.plan-desc{font-size:.68rem;color:var(--t3);margin-bottom:10px;line-height:1.4}
+.plan-price{font-size:1.3rem;font-weight:800}
+.plan-price span{font-size:.72rem;color:var(--t3);font-weight:500}
+.btn-plan{display:block;width:100%;padding:7px;background:var(--blue-dim);border:1px solid rgba(59,130,246,.2);border-radius:var(--rs);font-size:.75rem;font-weight:700;color:var(--blue);margin-top:10px;transition:all .15s}
+.btn-plan:hover{background:var(--blue);color:#fff}
+.pay-plan-box{background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:16px}
+.pay-plan-name{font-size:.9rem;font-weight:700;margin-bottom:2px}
+.pay-plan-desc{font-size:.75rem;color:var(--t3);margin-bottom:4px}
+.pay-amount{font-size:1.3rem;font-weight:800;color:var(--blue)}
+#payment-element{margin-bottom:14px}
+.pay-error{display:none;color:var(--red);font-size:.8rem;background:var(--red-dim);border:1px solid rgba(239,68,68,.2);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px}
+.btn-back{font-size:.78rem;color:var(--t3);padding:4px 8px;border-radius:6px;transition:color .15s}
+.btn-back:hover{color:var(--t1)}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--card2);border:1px solid var(--border2);color:var(--t1);padding:10px 18px;border-radius:20px;font-size:.82rem;font-weight:600;z-index:9999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* COMING SOON BANNER */
+.cs-banner{display:flex;align-items:center;gap:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:var(--rs);padding:10px 14px;font-size:.78rem;font-weight:500;color:var(--t2);margin-bottom:0}
+.cs-pill{margin-left:auto;font-size:.65rem;font-weight:700;padding:2px 8px;border:1px solid rgba(245,158,11,.3);border-radius:20px;color:var(--yellow)}
+
+/* ── AGENT MODE ── */
+#page-dashboard{display:flex;flex-direction:column;gap:20px}
+#page-agents{display:none;flex-direction:column;gap:20px}
+.page-header{display:flex;align-items:center;justify-content:space-between}
+.page-title{font-size:1.1rem;font-weight:800}
+.page-subtitle{font-size:.8rem;color:var(--t3);margin-top:2px}
+.btn-create-agent{display:flex;align-items:center;gap:7px;padding:9px 18px;background:var(--blue);color:#fff;border-radius:var(--rs);font-size:.82rem;font-weight:700;transition:all .2s}
+.btn-create-agent:hover{background:var(--blue-hover);transform:translateY(-1px)}
+
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.agent-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rx);overflow:hidden;transition:border-color .2s}
+.agent-card:hover{border-color:var(--border2)}
+.agent-card-header{display:flex;align-items:center;gap:12px;padding:16px}
+.agent-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.agent-status-dot.idle{background:var(--t3)}
+.agent-status-dot.running{background:var(--blue);animation:pulse 1.2s ease-in-out infinite}
+.agent-status-dot.error{background:var(--red)}
+.agent-status-dot.paused{background:var(--yellow)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+.agent-meta{flex:1;min-width:0}
+.agent-name{font-size:.88rem;font-weight:700}
+.agent-channel{font-size:.72rem;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-badge{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:20px}
+.agent-badge.idle{background:var(--card2);color:var(--t3);border:1px solid var(--border)}
+.agent-badge.running{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+.agent-badge.error{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.agent-badge.paused{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.2)}
+
+.agent-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border)}
+.agent-stat{padding:10px 14px;text-align:center;border-right:1px solid var(--border)}
+.agent-stat:last-child{border-right:none}
+.agent-stat-val{font-size:1.1rem;font-weight:800;color:var(--t1)}
+.agent-stat-label{font-size:.65rem;color:var(--t3);margin-top:1px}
+
+.agent-schedule{padding:10px 16px;font-size:.72rem;color:var(--t2);background:var(--card2);border-top:1px solid var(--border);display:flex;align-items:center;gap:6px}
+
+.agent-actions{display:flex;gap:6px;padding:12px 16px;border-top:1px solid var(--border)}
+.btn-agent-run{flex:1;padding:7px;background:var(--green);color:#fff;border-radius:var(--rs);font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+.btn-agent-run:hover:not(:disabled){background:#16a34a}
+.btn-agent-run:disabled{opacity:.4;cursor:not-allowed}
+.btn-agent-logs{padding:7px 12px;border:1px solid var(--border2);border-radius:var(--rs);font-size:.75rem;font-weight:600;color:var(--t2);transition:all .15s}
+.btn-agent-logs:hover{border-color:var(--blue);color:var(--blue)}
+.btn-agent-pause{padding:7px 12px;border:1px solid var(--border2);border-radius:var(--rs);font-size:.75rem;font-weight:600;color:var(--t2);transition:all .15s}
+.btn-agent-pause:hover{border-color:var(--yellow);color:var(--yellow)}
+.btn-agent-del{padding:7px 10px;border:1px solid var(--border2);border-radius:var(--rs);font-size:.75rem;color:var(--t3);transition:all .15s}
+.btn-agent-del:hover{border-color:var(--red);color:var(--red)}
+
+.agent-last-log{padding:8px 16px 12px;font-size:.72rem;color:var(--t3);border-top:1px solid var(--border);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* AGENT LOGS PANEL */
+.logs-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--rx);overflow:hidden}
+.logs-panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+.log-stream{max-height:400px;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:4px;font-family:'SF Mono','Fira Mono',monospace;font-size:.72rem}
+.log-entry{display:flex;gap:8px;line-height:1.4}
+.log-ts{color:var(--t3);flex-shrink:0;white-space:nowrap}
+.log-msg{flex:1}
+.log-entry.error .log-msg{color:var(--red)}
+.log-entry.success .log-msg{color:var(--green)}
+.log-entry.warn .log-msg{color:var(--yellow)}
+.log-entry.progress .log-msg{color:var(--t3)}
+
+/* CREATE AGENT MODAL */
+.agent-modal-box{max-width:520px;max-height:90vh;overflow-y:auto}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.form-group .field-label{margin-bottom:0}
+.shorts-count-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.shorts-count-btn{padding:8px 4px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--card2);color:var(--t3);font-size:.8rem;font-weight:700;transition:all .15s;text-align:center}
+.shorts-count-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.time-slots{display:flex;gap:8px;flex-wrap:wrap}
+.time-slot-input{background:var(--card2);border:1px solid var(--border2);color:var(--t1);padding:7px 10px;border-radius:var(--rs);font-size:.82rem;width:90px}
+.buffer-profile-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+.buffer-profile-item:hover{border-color:var(--blue)}
+.buffer-profile-item.selected{border-color:var(--blue);background:var(--blue-dim)}
+.buffer-profile-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;flex-shrink:0}
+.buffer-token-input{width:100%;background:var(--card2);border:1px solid var(--border2);color:var(--t1);padding:9px 12px;border-radius:var(--rs);font-size:.78rem;font-family:monospace}
+.buffer-token-input:focus{border-color:var(--blue)}
+.step-indicator{display:flex;gap:0;margin-bottom:20px}
+.step-item{flex:1;text-align:center;padding:8px 4px;font-size:.72rem;color:var(--t3);border-bottom:2px solid var(--border);transition:all .15s;cursor:pointer}
+.step-item.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:700}
+.step-item.done{color:var(--green);border-bottom-color:var(--green)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--t3)}
+
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .content{padding:16px}
+  .topbar{padding:12px 16px}
+  .plans-grid{grid-template-columns:1fr}
+  .clips-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">✂️</div>
+    <div>
+      <div class="sidebar-logo-name">ClipFlow</div>
+      <div class="sidebar-logo-tag">TikTok Clip Machine</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" id="nav-dashboard" onclick="switchPage('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="document.getElementById('creators-section').scrollIntoView({behavior:'smooth'})">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Creadores
+    </div>
+    <div class="nav-item" id="nav-agents" onclick="switchPage('agents')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M8.46 8.46a5 5 0 0 0 0 7.07"/></svg>
+      Agent Mode
+      <span style="margin-left:auto;font-size:.6rem;font-weight:800;padding:2px 6px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:10px;color:#fff">NEW</span>
+    </div>
+    <div class="sidebar-section-label">Cuenta</div>
+    <div id="user-area" style="display:none">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar-letter">U</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-email" id="user-email-display">usuario</div>
+          <div class="sidebar-user-plan" id="user-plan-display">Free</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div id="sidebar-login-btn" style="display:none">
+      <button class="btn-modal-primary" onclick="showLoginModal()" style="font-size:.78rem;padding:8px">Iniciar Sesión</button>
+    </div>
+    <div id="sidebar-user-actions" style="display:none;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between">        <span id="credit-badge" style="font-size:.75rem;color:var(--t2)">🎬 0 créditos</span>
+        <button class="btn-logout" onclick="logout()">Salir</button>
+      </div>
+      <button class="btn-upgrade" onclick="showPricingModal()" style="font-size:.75rem;padding:7px">⚡ Comprar créditos</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">Dashboard</div>
+    <div class="topbar-right">
+      <!-- login button hidden during testing -->
+      <button id="btn-login-header" onclick="showLoginModal()" class="btn-login-top" style="display:none">Iniciar sesión</button>
+      <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema"></button>
+      <div id="sse-dot" class="sse-dot" title="Conectando…"></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ AGENT MODE PAGE ══ -->
+    <div id="page-agents">
+
+      <div class="page-header">
+        <div>
+          <div class="page-title">🤖 Agent Mode</div>
+          <div class="page-subtitle">Automatización completa — descarga, procesa y publica en TikTok sin intervención</div>
+        </div>
+        <button class="btn-create-agent" onclick="showCreateAgentModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Crear Agente
+        </button>
+      </div>
+
+      <!-- AGENT STATUS BANNER -->
+      <div style="background:var(--blue-dim);border:1px solid rgba(59,130,246,.2);border-radius:var(--rx);padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
+        <div style="font-size:1.2rem">⚡</div>
+        <div>
+          <div style="font-size:.82rem;font-weight:700;margin-bottom:4px">Cómo funciona el Agent Mode</div>
+          <div style="font-size:.75rem;color:var(--t2);line-height:1.6">
+            1. <strong>Crea un agente</strong> con un canal de YouTube y cuántos Shorts procesar<br>
+            2. El agente <strong>descarga, traduce y dobla</strong> los Shorts automáticamente<br>
+            3. Los clips se <strong>programan en Buffer</strong> — 3 posts al día en tu TikTok<br>
+            4. Corre <strong>diariamente</strong> de forma automática — solo nuevos videos cada vez
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENTS LIST -->
+      <div id="agents-grid" class="agents-grid">
+        <div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--t3)">
+          <div style="font-size:2rem;margin-bottom:12px">🤖</div>
+          <div style="font-size:.88rem;font-weight:600;margin-bottom:6px">No hay agentes aún</div>
+          <div style="font-size:.78rem">Crea tu primer agente para comenzar la automatización</div>
+        </div>
+      </div>
+
+      <!-- AGENT LOGS PANEL -->
+      <div class="logs-panel" id="agent-logs-panel" style="display:none">
+        <div class="logs-panel-header">
+          <div class="card-title" id="agent-logs-title">📋 Logs del Agente</div>
+          <button onclick="document.getElementById('agent-logs-panel').style.display='none'" style="color:var(--t3);font-size:.8rem;padding:4px 8px;border:1px solid var(--border);border-radius:6px">✕ Cerrar</button>
+        </div>
+        <div class="log-stream" id="agent-log-stream">
+          <div style="color:var(--t3);text-align:center;padding:20px">Selecciona un agente para ver sus logs</div>
+        </div>
+      </div>
+
+    </div><!-- /page-agents -->
+
+    <!-- ══ DASHBOARD PAGE ══ -->
+    <div id="page-dashboard">
+
+    <!-- JOBS SECTION -->
+    <div class="card" id="jobs-section">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot"></div>
+          Trabajos
+        </div>
+        <div class="jobs-meta">
+          <span id="jobs-status-dot" class="jobs-count-badge">Cargando…</span>
+          <button onclick="loadJobsFromAPI()" style="font-size:.72rem;color:var(--t3);padding:4px 8px;border:1px solid var(--border);border-radius:6px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--t3)'">↺ Actualizar</button>
+        </div>
+      </div>
+      <div id="jobs-list">
+        <div class="jobs-empty">
+          <div class="jobs-empty-icon">🎬</div>
+          <div class="jobs-empty-text">Agrega una URL y presiona Procesar para comenzar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUT + SETTINGS -->
+    <div class="card input-section">
+      <div class="card-header">
+        <div class="card-title">Nuevo Trabajo</div>
+        <div class="cs-banner" style="margin:0;padding:6px 12px;font-size:.72rem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:var(--yellow)"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.77a4.85 4.85 0 0 1-1.01-.08z"/></svg>
+          Publicación automática en TikTok
+          <span class="cs-pill">Próximamente</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div>
+          <label class="field-label">URLs de YouTube</label>
+          <textarea id="url-input" class="url-area" placeholder="Pega una o más URLs de YouTube (una por línea)&#10;https://youtube.com/watch?v=...&#10;https://youtube.com/shorts/..."></textarea>
+        </div>
+
+        <!-- QUEUE PREVIEW -->
+        <div id="queue-preview" style="display:none">
+          <div class="queue-preview-label">
+            <span>Videos en cola</span>
+            <button class="btn-clear-queue" onclick="clearQueue()">✕ Limpiar</button>
+          </div>
+          <div id="queue-list"></div>
+        </div>
+
+        <!-- DUB SETTINGS -->
+        <div class="dub-settings" id="dub-settings">
+          <div class="dub-toggle-row" onclick="toggleDubSettings()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--blue)"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <span class="dub-toggle-label">Configuración de Doblaje</span>
+            <span class="dub-arrow">▾</span>
+          </div>
+          <div class="dub-body">
+            <div>
+              <label class="field-label">Variante de Español</label>
+              <select id="dub-language" class="dub-select" onchange="updatePreview()">
+                <optgroup label="🇺🇸 Estados Unidos">
+                  <option value="Spanish (United States)" >Español — Estados Unidos 🇺🇸</option>
+                </optgroup>
+                <optgroup label="🌎 América del Norte">
+                  <option value="Spanish (Mexico)">Español — México 🇲🇽</option>
+                  <option value="Spanish (Cuba)">Español — Cuba 🇨🇺</option>
+                  <option value="Spanish (Puerto Rico)">Español — Puerto Rico 🇵🇷</option>
+                  <option value="Spanish (Dominican Republic)">Español — República Dominicana 🇩🇴</option>
+                </optgroup>
+                <optgroup label="🌎 Centroamérica">
+                  <option value="Spanish (Guatemala)">Español — Guatemala 🇬🇹</option>
+                  <option value="Spanish (Honduras)">Español — Honduras 🇭🇳</option>
+                  <option value="Spanish (El Salvador)">Español — El Salvador 🇸🇻</option>
+                  <option value="Spanish (Nicaragua)">Español — Nicaragua 🇳🇮</option>
+                  <option value="Spanish (Costa Rica)">Español — Costa Rica 🇨🇷</option>
+                  <option value="Spanish (Panama)">Español — Panamá 🇵🇦</option>
+                </optgroup>
+                <optgroup label="🌎 América del Sur">
+                  <option value="Spanish (Colombia)" selected>Español — Colombia 🇨🇴</option>
+                  <option value="Spanish (Venezuela)">Español — Venezuela 🇻🇪</option>
+                  <option value="Spanish (Peru)">Español — Perú 🇵🇪</option>
+                  <option value="Spanish (Ecuador)">Español — Ecuador 🇪🇨</option>
+                  <option value="Spanish (Bolivia)">Español — Bolivia 🇧🇴</option>
+                  <option value="Spanish (Chile)">Español — Chile 🇨🇱</option>
+                  <option value="Spanish (Argentina)">Español — Argentina 🇦🇷</option>
+                  <option value="Spanish (Uruguay)">Español — Uruguay 🇺🇾</option>
+                  <option value="Spanish (Paraguay)">Español — Paraguay 🇵🇾</option>
+                </optgroup>
+                <optgroup label="🌍 España">
+                  <option value="Spanish (Spain)">Español — España 🇪🇸</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="opt-grid">
+              <div class="opt-row"><div class="opt-info"><span class="opt-name">Clonar Voz</span><span class="opt-desc">Clona la voz original del hablante en español</span></div><div class="opt-btns" id="tog-voice-clone"><button class="opt-btn active" onclick="setOpt('voice-clone',true)">ON</button><button class="opt-btn" onclick="setOpt('voice-clone',false)">OFF</button></div></div>
+              <div class="opt-row"><div class="opt-info"><span class="opt-name">Lip Sync</span><span class="opt-desc">Sincroniza el movimiento de labios con el audio</span></div><div class="opt-btns" id="tog-lipsync"><button class="opt-btn active" onclick="setOpt('lipsync',true)">ON</button><button class="opt-btn" onclick="setOpt('lipsync',false)">OFF</button></div></div>
+              <div class="opt-row"><div class="opt-info"><span class="opt-name">Subtítulos</span><span class="opt-desc">Agrega subtítulos quemados en el video</span></div><div class="opt-btns" id="tog-captions"><button class="opt-btn active" onclick="setOpt('captions',true)">ON</button><button class="opt-btn" onclick="setOpt('captions',false)">OFF</button></div></div>
+              <div class="opt-row"><div class="opt-info"><span class="opt-name">Solo Audio</span><span class="opt-desc">Devuelve solo el audio doblado, sin video</span></div><div class="opt-btns" id="tog-audio-only"><button class="opt-btn" onclick="setOpt('audio-only',true)">ON</button><button class="opt-btn active" onclick="setOpt('audio-only',false)">OFF</button></div></div>
+              <div class="opt-row"><div class="opt-info"><span class="opt-name">Detección de Escena</span><span class="opt-desc">HeyGen detecta cambios de escena para mejor sync</span></div><div class="opt-btns" id="tog-scene-detect"><button class="opt-btn active" onclick="setOpt('scene-detect',true)">ON</button><button class="opt-btn" onclick="setOpt('scene-detect',false)">OFF</button></div></div>
+              <div class="opt-row opt-row-highlight"><div class="opt-info"><span class="opt-name">🎬 No Cortar — Video Completo</span><span class="opt-desc">Omite el paso de recorte y procesa el video entero</span></div><div class="opt-btns" id="tog-no-cut"><button class="opt-btn active" onclick="setOpt('no-cut',true)">ON</button><button class="opt-btn" onclick="setOpt('no-cut',false)">OFF</button></div></div>
+            </div>
+            <div class="spk-row">
+              <span class="spk-label">Speakers:</span>
+              <button class="spk-btn active" data-val="0" onclick="setSpeakers(0)">Auto</button>
+              <button class="spk-btn" data-val="1" onclick="setSpeakers(1)">1</button>
+              <button class="spk-btn" data-val="2" onclick="setSpeakers(2)">2</button>
+              <button class="spk-btn" data-val="3" onclick="setSpeakers(3)">3</button>
+              <button class="spk-btn" data-val="4" onclick="setSpeakers(4)">4+</button>
+            </div>
+            <div class="dub-preview-bar"><span id="preview-text">Vista previa de configuración…</span></div>
+          </div>
+        </div>
+
+        <button id="btn-process" class="btn-process" onclick="handleProcess()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Procesar Videos
+        </button>
+      </div>
+    </div>
+
+    <!-- CREATORS -->
+    <div class="card" id="creators-section">
+      <div class="section-header">
+        <div class="section-title">Creadores Favoritos</div>
+        <button class="btn-add-creator" onclick="showAddCreatorModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar
+        </button>
+      </div>
+      <div id="creators-grid" class="creators-grid"></div>
+      <div id="creator-videos-panel" class="creator-videos-panel">
+        <div class="glass-sm cvp-inner"></div>
+      </div>
+    </div>
+
+    </div><!-- /page-dashboard -->
+
+  </div><!-- /content -->
+</main><!-- /main -->
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- LOGIN MODAL -->
+<div class="modal" id="login-modal" onclick="closeLoginModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('login-modal').style.display='none'">✕</button>
+    <div class="modal-title">Iniciar Sesión</div>
+    <div class="modal-sub">Ingresa tu correo y te enviamos un link mágico para entrar.</div>
+    <input class="modal-input" type="email" id="login-email" placeholder="tu@correo.com" onkeydown="if(event.key==='Enter')sendMagicLink()"/>
+    <button class="btn-modal-primary" onclick="sendMagicLink()">🚀 Enviar Link Mágico</button>
+    <div id="login-msg" class="login-msg"></div>
+  </div>
+</div>
+
+<!-- PRICING MODAL -->
+<div class="modal" id="pricing-modal" onclick="closePricingModal(event)">
+  <div class="modal-box pricing-modal-box">
+    <button class="modal-close" onclick="closePricingModal()">✕</button>
+    <div id="step-plans">
+      <div class="modal-title">Elige tu plan</div>
+      <div class="modal-sub">Compra créditos para procesar y doblar tus videos al español.</div>
+      <div class="plans-grid">
+        <div class="plan-card" onclick="selectPlan('starter')">
+          <div class="plan-icon">🎬</div>
+          <div class="plan-name">Starter</div>
+          <div class="plan-desc">10 videos doblados</div>
+          <div class="plan-price">$9<span> único</span></div>
+          <button class="btn-plan">Elegir →</button>
+        </div>
+        <div class="plan-card popular" onclick="selectPlan('pro')">
+          <div class="popular-badge">⭐ Más Popular</div>
+          <div class="plan-icon">🚀</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-desc">25 videos doblados</div>
+          <div class="plan-price">$19<span> único</span></div>
+          <button class="btn-plan">Elegir →</button>
+        </div>
+        <div class="plan-card" onclick="selectPlan('unlimited')">
+          <div class="plan-icon">♾️</div>
+          <div class="plan-name">Unlimited</div>
+          <div class="plan-desc">Videos ilimitados</div>
+          <div class="plan-price">$49<span>/mes</span></div>
+          <button class="btn-plan">Elegir →</button>
+        </div>
+      </div>
+    </div>
+    <div id="step-payment" style="display:none">
+      <button class="btn-back" onclick="showPlansStep()">← Volver</button>
+      <div class="pay-plan-box" style="margin-top:12px">
+        <div class="pay-plan-name" id="pay-plan-name"></div>
+        <div class="pay-plan-desc" id="pay-plan-desc"></div>
+        <div class="pay-amount" id="pay-amount"></div>
+      </div>
+      <div id="pay-error" class="pay-error"></div>
+      <div id="payment-element"></div>
+      <button id="btn-pay-now" class="btn-modal-primary" onclick="submitPayment()">
+        <span id="pay-btn-text">🔒 Pagar Ahora</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CREATOR MODAL -->
+<div class="modal" id="add-creator-modal" onclick="closeAddCreatorModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAddCreatorModal()">✕</button>
+    <div class="modal-title">Agregar Creador</div>
+    <div class="modal-sub">Pega una URL de YouTube — canal, video o Short. Detectamos el canal automáticamente.</div>
+    <label class="field-label">URL o @handle</label>
+    <input class="modal-input" type="text" id="creator-input" placeholder="https://youtube.com/@CreadorName"/>
+    <button id="btn-add-creator-submit" class="btn-modal-primary" onclick="addCreator()">➕ Agregar Creador</button>
+    <div id="add-creator-msg" class="login-msg"></div>
+  </div>
+</div>
+
+<!-- PUBLISH MODAL -->
+<div class="modal" id="publish-modal" onclick="if(event.target===this)closePublishModal()">
+  <div class="modal-box pub-modal-box">
+    <button class="modal-close" onclick="closePublishModal()">✕</button>
+    <div class="modal-title">📤 Publicar en TikTok</div>
+    <div class="modal-sub" style="margin-bottom:14px">Elige un título viral y programa el post en Buffer</div>
+
+    <!-- Title picker -->
+    <div style="font-size:.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Selecciona el título</div>
+    <div id="pub-titles-list"></div>
+
+    <!-- Hashtags -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:6px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Hashtags</div>
+      <button onclick="regenerateHashtags()" id="btn-regen-tags" style="font-size:.7rem;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);background:var(--card2);color:var(--t2);transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--t2)'">✨ Regenerar con IA</button>
+    </div>
+    <div id="pub-hashtags-loading" style="display:none;font-size:.72rem;color:var(--t3);padding:4px 0">⏳ Generando hashtags con IA…</div>
+    <div class="pub-hashtags" id="pub-hashtags-display"></div>
+
+    <!-- Caption preview — EDITABLE -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em">Caption (editable)</div>
+      <span id="pub-char-count" style="font-size:.72rem;font-weight:700;color:var(--green)">0/150</span>
+    </div>
+    <textarea class="pub-caption-preview" id="pub-caption-preview" style="resize:vertical;width:100%;font-family:inherit;border:1px solid var(--border2);background:var(--card2);border-radius:var(--rs);padding:10px 12px;color:var(--t1);line-height:1.6;min-height:100px" oninput="syncCaptionFromTextarea()"></textarea>
+
+    <!-- Schedule -->
+    <div style="font-size:.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 7px">Fecha y hora de publicación (ET)</div>
+    <div class="pub-schedule-row">
+      <input class="pub-date-input" type="date" id="pub-date"/>
+      <select class="pub-time-select" id="pub-time">
+        <option value="09:00">9:00 AM</option>
+        <option value="14:00">2:00 PM</option>
+        <option value="19:00">7:00 PM</option>
+        <option value="custom">Personalizar…</option>
+      </select>
+    </div>
+    <div id="pub-custom-time-row" style="display:none;margin-top:7px">
+      <input class="pub-date-input" type="time" id="pub-custom-time" value="12:00" style="width:100%"/>
+    </div>
+
+    <button class="btn-publish-now" id="btn-publish-now" onclick="submitPublish()" style="margin-top:14px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.77a4.85 4.85 0 0 1-1.01-.08z"/></svg>
+      Programar en Buffer
+    </button>
+    <div class="pub-status-msg" id="pub-status-msg"></div>
+  </div>
+</div>
+
+<!-- CREATE AGENT MODAL -->
+<div class="modal" id="create-agent-modal" onclick="if(event.target===this)closeCreateAgentModal()">
+  <div class="modal-box agent-modal-box">
+    <button class="modal-close" onclick="closeCreateAgentModal()">✕</button>
+    <div class="modal-title">🤖 Crear Agente</div>
+    <div class="modal-sub">Configura la automatización completa de YouTube → TikTok</div>
+
+    <div class="step-indicator">
+      <div class="step-item active" id="astep-1" onclick="goAgentStep(1)">1. Canal</div>
+      <div class="step-item" id="astep-2" onclick="goAgentStep(2)">2. Configuración</div>
+      <div class="step-item" id="astep-3" onclick="goAgentStep(3)">3. Buffer</div>
+      <div class="step-item" id="astep-4" onclick="goAgentStep(4)">4. Horario</div>
+    </div>
+
+    <!-- STEP 1: Channel -->
+    <div id="agent-step-1">
+      <div class="form-group">
+        <label class="field-label">Nombre del Agente</label>
+        <input class="modal-input" id="agent-name" placeholder="Ej: TikTok Finance Daily" style="margin-bottom:0"/>
+      </div>
+      <div class="form-group">
+        <label class="field-label">URL del Canal de YouTube</label>
+        <input class="modal-input" id="agent-channel-url" placeholder="https://youtube.com/@CreadorName" style="margin-bottom:0"/>
+      </div>
+      <div class="form-group">
+        <label class="field-label">Tipo de contenido a monitorear</label>
+        <div class="shorts-count-grid" style="grid-template-columns:repeat(3,1fr)">
+          <button class="shorts-count-btn active" onclick="selectContentType(this,'shorts')">⚡ Shorts</button>
+          <button class="shorts-count-btn" onclick="selectContentType(this,'videos')">🎬 Videos</button>
+          <button class="shorts-count-btn" onclick="selectContentType(this,'both')">📺 Ambos</button>
+        </div>
+        <div style="font-size:.7rem;color:var(--t3);margin-top:6px">El agente detecta automáticamente cualquier contenido nuevo subido al canal</div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">¿Cuántos videos procesar por ejecución?</label>
+        <div class="shorts-count-grid">
+          <button class="shorts-count-btn active" data-val="5" onclick="selectShortsCount(this,5)">5</button>
+          <button class="shorts-count-btn" data-val="10" onclick="selectShortsCount(this,10)">10</button>
+          <button class="shorts-count-btn" data-val="20" onclick="selectShortsCount(this,20)">20</button>
+          <button class="shorts-count-btn" data-val="50" onclick="selectShortsCount(this,50)">50</button>
+        </div>
+        <div style="font-size:.7rem;color:var(--t3);margin-top:6px">Solo procesa Shorts nuevos — los ya procesados se saltan automáticamente</div>
+      </div>
+      <button class="btn-modal-primary" onclick="goAgentStep(2)">Siguiente →</button>
+    </div>
+
+    <!-- STEP 2: Dub Config -->
+    <div id="agent-step-2" style="display:none">
+      <div class="form-group">
+        <label class="field-label">Variante de Español</label>
+        <select id="agent-language" class="dub-select" style="margin-bottom:0">
+          <option value="Spanish (United States)">Español — Estados Unidos 🇺🇸</option>
+          <option value="Spanish (Mexico)">Español — México 🇲🇽</option>
+          <option value="Spanish (Colombia)">Español — Colombia 🇨🇴</option>
+          <option value="Spanish (Argentina)">Español — Argentina 🇦🇷</option>
+          <option value="Spanish (Spain)">Español — España 🇪🇸</option>
+        </select>
+      </div>
+      <div class="opt-grid" style="gap:5px;margin-bottom:14px">
+        <div class="opt-row" style="padding:8px 10px"><div class="opt-info"><span class="opt-name" style="font-size:.78rem">Clonar Voz</span></div><div class="opt-btns" id="atog-voice-clone"><button class="opt-btn active" onclick="setAgentOpt('voice-clone',true)">ON</button><button class="opt-btn" onclick="setAgentOpt('voice-clone',false)">OFF</button></div></div>
+        <div class="opt-row" style="padding:8px 10px"><div class="opt-info"><span class="opt-name" style="font-size:.78rem">Lip Sync</span></div><div class="opt-btns" id="atog-lipsync"><button class="opt-btn active" onclick="setAgentOpt('lipsync',true)">ON</button><button class="opt-btn" onclick="setAgentOpt('lipsync',false)">OFF</button></div></div>
+        <div class="opt-row" style="padding:8px 10px"><div class="opt-info"><span class="opt-name" style="font-size:.78rem">Subtítulos</span></div><div class="opt-btns" id="atog-captions"><button class="opt-btn" onclick="setAgentOpt('captions',true)">ON</button><button class="opt-btn active" onclick="setAgentOpt('captions',false)">OFF</button></div></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-agent-logs" onclick="goAgentStep(1)" style="flex:0">← Atrás</button>
+        <button class="btn-modal-primary" onclick="goAgentStep(3)" style="flex:1">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Buffer -->
+    <div id="agent-step-3" style="display:none">
+      <div class="form-group">
+        <label class="field-label">Buffer Access Token</label>
+        <input class="buffer-token-input" id="agent-buffer-token" placeholder="Pega tu Buffer access token aquí" oninput="loadBufferProfiles()"/>
+        <div style="font-size:.7rem;color:var(--t3);margin-top:5px">
+          Ve a <strong>buffer.com/developers/apps</strong> → crea una app → copia el Access Token
+        </div>
+      </div>
+      <div id="buffer-profiles-list" style="display:none">
+        <label class="field-label">Selecciona dónde publicar</label>
+        <div id="buffer-profiles-items"></div>
+      </div>
+      <div id="buffer-loading" style="display:none;color:var(--t3);font-size:.78rem;padding:8px 0">⏳ Cargando perfiles de Buffer...</div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn-agent-logs" onclick="goAgentStep(2)" style="flex:0">← Atrás</button>
+        <button class="btn-modal-primary" onclick="goAgentStep(4)" style="flex:1">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Schedule -->
+    <div id="agent-step-4" style="display:none">
+      <div class="form-group">
+        <label class="field-label">Hora de ejecución diaria (cuando el agente corre)</label>
+        <select id="agent-cron-hour" class="dub-select">
+          <option value="4">4:00 AM — madrugada</option>
+          <option value="5">5:00 AM — madrugada</option>
+          <option value="6" selected>6:00 AM — mañana temprano</option>
+          <option value="8">8:00 AM — mañana</option>
+          <option value="10">10:00 AM — media mañana</option>
+        </select>
+        <div style="font-size:.7rem;color:var(--t3);margin-top:5px">El agente corre una vez al día a esta hora y procesa los nuevos Shorts</div>
+      </div>
+      <div class="form-group">
+        <label class="field-label">Horarios de publicación en TikTok (3 posts/día)</label>
+        <div class="time-slots">
+          <div><div style="font-size:.68rem;color:var(--t3);margin-bottom:4px">Post 1</div><input class="time-slot-input" id="agent-time-1" type="time" value="09:00"/></div>
+          <div><div style="font-size:.68rem;color:var(--t3);margin-bottom:4px">Post 2</div><input class="time-slot-input" id="agent-time-2" type="time" value="14:00"/></div>
+          <div><div style="font-size:.68rem;color:var(--t3);margin-bottom:4px">Post 3</div><input class="time-slot-input" id="agent-time-3" type="time" value="19:00"/></div>
+        </div>
+      </div>
+      <div id="create-agent-error" style="display:none;color:var(--red);font-size:.78rem;padding:8px;background:var(--red-dim);border-radius:var(--rs);margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-agent-logs" onclick="goAgentStep(3)" style="flex:0">← Atrás</button>
+        <button id="btn-create-agent-submit" class="btn-modal-primary" onclick="submitCreateAgent()" style="flex:1">🚀 Crear Agente</button>
+      </div>
+    </div><!-- /step4 -->
+  </div><!-- /modal-box -->
+</div><!-- /create-agent-modal -->
+<div id="browse-panel">
+  <div class="browse-inner">
+    <div class="browse-header">
+      <div class="browse-avatar" id="browse-avatar">?</div>
+      <div class="browse-creator-info">
+        <div class="browse-creator-name" id="browse-creator-name">Creador</div>
+        <div class="browse-creator-url" id="browse-creator-url"></div>
+      </div>
+      <button class="browse-close" onclick="closeBrowseAll()">✕ Cerrar</button>
+    </div>
+    <div class="browse-controls">
+      <div class="browse-tabs">
+        <button class="btab active" id="btab-videos" onclick="setBrowseTab('videos')">🎬 Videos</button>
+        <button class="btab" id="btab-shorts" onclick="setBrowseTab('shorts')">⚡ Shorts</button>
+      </div>
+      <input class="browse-search" id="browse-search" type="text" placeholder="Buscar videos…" oninput="onBrowseSearch(this.value)">
+      <select class="browse-sort" id="browse-sort" onchange="onBrowseSort(this.value)">
+        <option value="newest">Más recientes</option>
+        <option value="oldest">Más antiguos</option>
+        <option value="popular">Más populares</option>
+      </select>
+      <label class="browse-selall">
+        <input type="checkbox" id="browse-select-all-chk" onchange="toggleSelectAll(this.checked)">
+        Seleccionar todos
+      </label>
+    </div>
+    <div id="browse-grid" class="browse-grid"></div>
+    <div id="browse-load-more">
+      <button class="btn-load-more" onclick="loadMoreBrowse()">Cargar más videos ↓</button>
+    </div>
+    <div class="browse-footer">
+      <span class="browse-sel-count" id="browse-selected-count">0 seleccionado(s)</span>
+      <button id="btn-browse-queue" class="btn-browse-queue" onclick="addBrowseToQueue()" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Agregar a la cola
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const state = { jobs: {}, sse: null };
+const STEP_LABELS = ['Descargando video','Transcribiendo audio','Analizando momentos virales','Recortando clips','Doblando al español','Generando subtítulos','Generando títulos virales','Exportando clips finales'];
+
+function connectSSE() {
+  if (state.sse) state.sse.close();
+  const es = new EventSource('/api/progress');
+  state.sse = es;
+  es.onopen = () => { document.getElementById('sse-dot').classList.add('connected'); document.getElementById('sse-dot').title = 'SSE conectado'; };
+  es.onerror = () => { document.getElementById('sse-dot').classList.remove('connected'); };
+  es.onmessage = (e) => { let msg; try { msg = JSON.parse(e.data); } catch { return; } handleSSEMessage(msg); };
+}
+function handleSSEMessage(msg) {
+  switch (msg.type) {
+    case 'snapshot': msg.jobs.forEach(j => { state.jobs[j.id] = j; }); renderAllJobs(); break;
+    case 'job_created': state.jobs[msg.job.id] = msg.job; renderAllJobs(); break;
+    case 'job_started': if (state.jobs[msg.jobId]) { state.jobs[msg.jobId].status = 'running'; renderJob(msg.jobId); } break;
+    case 'job_progress': if (state.jobs[msg.jobId]) { state.jobs[msg.jobId].progress = msg.progress; renderJob(msg.jobId); } break;
+    case 'job_done': state.jobs[msg.job.id] = msg.job; renderJob(msg.job.id); break;
+    case 'job_error': if (state.jobs[msg.jobId]) { state.jobs[msg.jobId].status = 'error'; state.jobs[msg.jobId].error = msg.error; renderJob(msg.jobId); } break;
+  }
+}
+async function handleProcess() {
+  const textarea = document.getElementById('url-input');
+  const raw = textarea.value.trim();
+  if (!raw) { showToast('Ingresa al menos una URL'); return; }
+  const urls = raw.split('\n').map(u => u.trim()).filter(Boolean);
+  if (!urls.length) { showToast('No se encontraron URLs válidas'); return; }
+  const btn = document.getElementById('btn-process');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg> Enviando…';
+  try {
+    const res = await fetch('/api/process', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ urls, dubSettings: getDubSettings() }) });
+    const data = await res.json();
+    if (res.status === 401) { showLoginModal(); throw new Error('login_required'); }
+    // if (res.status === 402) { showPricingModal(); throw new Error(data.error); } // disabled for testing
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    await loadUser();
+    showToast(`✓ ${data.jobIds.length} trabajo(s) en cola — procesando…`);
+    textarea.value = '';
+    renderQueuePreview();
+    setTimeout(()=>{ const s=document.getElementById('jobs-section'); if(s) s.scrollIntoView({behavior:'smooth',block:'start'}); },400);
+  } catch (err) { if (err.message !== 'login_required') showToast('Error: ' + err.message); }
+  finally { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Procesar Videos'; }
+}
+function renderAllJobs() {
+  const list = document.getElementById('jobs-list');
+  const dot = document.getElementById('jobs-status-dot');
+  const ids = Object.keys(state.jobs);
+  if (!ids.length) {
+    list.innerHTML='<div class="jobs-empty"><div class="jobs-empty-icon">🎬</div><div class="jobs-empty-text">Agrega una URL y presiona Procesar para comenzar</div></div>';
+    if(dot) dot.textContent='Sin trabajos';
+    return;
+  }
+  const running = ids.filter(id=>['running','queued'].includes(state.jobs[id].status)).length;
+  if(dot) dot.textContent = running ? `⚙️ ${running} procesando…` : `${ids.length} trabajos`;
+  const sorted = [...ids].sort((a,b)=>{
+    const order={running:0,queued:1,done:2,error:3};
+    const oa=order[state.jobs[a].status]??2, ob=order[state.jobs[b].status]??2;
+    if(oa!==ob) return oa-ob;
+    return (state.jobs[b].createdAt||0)-(state.jobs[a].createdAt||0);
+  });
+  sorted.forEach(id => {
+    const job = state.jobs[id];
+    let el = document.getElementById('job-'+id);
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'job-'+id;
+      list.appendChild(el);
+      el.outerHTML = buildJobCard(job);
+    } else if (job.status === 'running' || job.status === 'queued') {
+      el.outerHTML = buildJobCard(job);
+    }
+  });
+}
+function renderJob(id) {
+  const job=state.jobs[id]; if(!job) return;
+  let el=document.getElementById('job-'+id);
+  if(!el){ el=document.createElement('div'); el.id='job-'+id; document.getElementById('jobs-list').appendChild(el); }
+  if(job.status==='running'||job.status==='queued'||!el.innerHTML){ el.outerHTML=buildJobCard(job); }
+}
+function buildJobCard(job) {
+  const iconMap={queued:'⏳',running:'⚙️',done:'✅',error:'❌'};
+  const progress=job.progress||{}, stepIndex=typeof progress.index==='number'?progress.index:(typeof progress.stepIndex==='number'?progress.stepIndex:-1);
+  const stepProgress=typeof progress.stepProgress==='number'?progress.stepProgress:0;
+  const totalSteps=progress.totalSteps||STEP_LABELS.length;
+  const overallPct=job.status==='done'?100:job.status==='error'?0:stepIndex<0?0:Math.round(((stepIndex+stepProgress/100)/totalSteps)*100);
+  const isRunning=job.status==='running';
+  const shortUrl=job.url.replace(/^https?:\/\/(www\.)?/,'').substring(0,60)+(job.url.length>65?'…':'');
+  const chips=STEP_LABELS.map((label,i)=>{let cls='';if(i<stepIndex||job.status==='done')cls='done';else if(i===stepIndex&&isRunning)cls='active';return `<span class="step-chip ${cls}">${label}</span>`;}).join('');
+  const clipsHtml=(job.clips&&job.clips.length)?buildClipsGrid(job):'';
+  const errorHtml=job.error?`<div class="job-error-msg">❌ ${escHtml(job.error)}</div>`:'';
+  const dlAllBtn=(job.status==='done'&&job.clips&&job.clips.length)?`<a class="btn-dl-all" href="/api/download/${job.id}" download><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar todo (.zip)</a>`:'';
+  return `<div class="job-card" id="job-${job.id}" data-status="${job.status}">
+    <div class="job-card-header">
+      <div class="job-card-icon ${job.status}">${iconMap[job.status]||'⏳'}</div>
+      <div class="job-card-meta">
+        <div class="job-title">${escHtml(shortUrl)}</div>
+        <div class="job-date">${job.createdAt?new Date(job.createdAt).toLocaleString('es-ES'):''}</div>
+      </div>
+      <div class="job-card-actions">
+        <span class="badge badge-${job.status}">${statusLabel(job.status)}</span>
+        <button class="btn-icon-del" onclick="deleteJob('${job.id}')" title="Eliminar">✕</button>
+      </div>
+    </div>
+    ${isRunning?`
+    <div class="job-progress-wrap">
+      <div class="progress-label-row"><span>${progress.label||'Procesando…'}</span><span style="font-weight:700">${overallPct}%</span></div>
+      <div class="progress-track"><div class="progress-fill anim" style="width:${overallPct}%"></div></div>
+    </div>
+    <div class="steps-row">${chips}</div>`
+    :job.status==='queued'?`<div class="job-queued-msg">⏳ En cola — iniciando pronto…</div>`
+    :job.status==='done'?`<div class="steps-row">${chips}</div>`:''}
+    ${errorHtml}
+    ${job.status==='done'&&job.clips&&job.clips.length?`
+    <div class="clips-section">
+      <div class="clips-section-header">
+        <div class="clips-section-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          ${job.clips.length} clip${job.clips.length>1?'s':''} generados
+        </div>
+        ${dlAllBtn}
+      </div>
+      ${clipsHtml}
+    </div>`:''}
+  </div>`;
+}
+const TIKTOK_ICON=`<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.77a4.85 4.85 0 0 1-1.01-.08z"/></svg>`;
+const DL_ICON=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+
+function buildClipsGrid(job) {
+  const jobId = job.id;
+  const cards = job.clips.map((clip, i) => {
+    const dur = clip.end && clip.start ? Math.round(clip.end - clip.start) : '?';
+    const score = clip.score || 0;
+    const clipKey = escAttr(clip.id || clip.filename || String(i));
+    const hasES = !!clip.dubbedUrl;
+
+    // Video toggle tabs
+    const videoTabs = hasES ? `
+      <div class="clip-video-tabs">
+        <button class="clip-vtab active" id="vtab-orig-${jobId}-${i}" onclick="switchClipVideo('${jobId}',${i},'orig')">🎬 Original</button>
+        <button class="clip-vtab es" id="vtab-es-${jobId}-${i}" onclick="switchClipVideo('${jobId}',${i},'es')">🇪🇸 Español</button>
+      </div>` : '';
+
+    // Video player (shows original by default)
+    const videoEl = `
+      <div class="clip-video-wrap" id="vwrap-${jobId}-${i}">
+        <div class="clip-badges">
+          <span class="clip-dur-badge">⏱ ${dur}s</span>
+          <span class="clip-score-badge">⭐ ${score}/10</span>
+        </div>
+        ${hasES ? `<span class="clip-es-badge">🇪🇸 ES listo</span>` : ''}
+        <video controls preload="metadata" id="vid-${jobId}-${i}" src="${escAttr(clip.url || '')}" style="width:100%;height:100%;object-fit:cover"></video>
+      </div>`;
+
+    // Download buttons
+    const dlRow = `
+      <div class="clip-actions">
+        <a class="btn-dl-orig" href="${escAttr(clip.url||'')}" download="${escAttr(clip.filename||'clip.mp4')}">${DL_ICON} Original</a>
+        ${hasES ? `<a class="btn-dl-es" href="${escAttr(clip.dubbedUrl)}" download="${escAttr(clip.dubbedFilename||'clip_es.mp4')}">${DL_ICON} 🇪🇸 ES</a>` : ''}
+      </div>`;
+
+    // Titles
+    const titlesHtml = (clip.titles||[]).map((t,ti) => `
+      <button class="clip-title-pill" onclick="copyTitle(this,'${escAttr(t)}')">${escHtml(t)}
+        <svg style="flex-shrink:0;margin-left:auto;opacity:.4" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>`).join('');
+
+    return `<div class="clip-card">
+      ${videoTabs}
+      ${videoEl}
+      <div class="clip-info">
+        <div class="clip-titles-label">🇪🇸 Títulos virales</div>
+        ${titlesHtml}
+      </div>
+      ${dlRow}
+      <button class="btn-tiktok-publish" onclick="openPublishModal('${escAttr(jobId)}','${clipKey}')">
+        ${TIKTOK_ICON} Publicar en TikTok via Buffer
+      </button>
+    </div>`;
+  });
+  return `<div class="clips-strip">${cards.join('')}</div>`;
+}
+
+function switchClipVideo(jobId, clipIdx, mode) {
+  const job = state.jobs[jobId];
+  const clip = job?.clips?.[clipIdx];
+  if (!clip) return;
+  const vid = document.getElementById(`vid-${jobId}-${clipIdx}`);
+  const origTab = document.getElementById(`vtab-orig-${jobId}-${clipIdx}`);
+  const esTab = document.getElementById(`vtab-es-${jobId}-${clipIdx}`);
+  if (!vid) return;
+  const src = mode === 'es' ? clip.dubbedUrl : clip.url;
+  if (!src) return;
+  vid.src = src;
+  vid.load();
+  origTab?.classList.toggle('active', mode === 'orig');
+  esTab?.classList.toggle('active', mode === 'es');
+}
+
+function statusLabel(s){return{queued:'En cola',running:'Procesando',done:'Listo',error:'Error'}[s]||s}
+function escHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function escAttr(str){return String(str).replace(/"/g,'&quot;')}
+function copyTitle(btn,text){navigator.clipboard.writeText(text).then(()=>{btn.classList.add('copied');showToast('¡Título copiado!');setTimeout(()=>btn.classList.remove('copied'),1800)})}
+let toastTimer;
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
+
+// AUTH
+let currentUser=null;
+async function loadUser(){
+  const res=await fetch('/auth/me'); const data=await res.json(); currentUser=data.user; renderUserArea();
+  const p=new URLSearchParams(location.search);
+  if(p.get('payment')==='success'){showToast('✅ Pago exitoso! Créditos agregados.');history.replaceState({},'','/');setTimeout(loadUser,2000)}
+  if(p.get('payment')==='cancelled'){showToast('Pago cancelado.');history.replaceState({},'','/')}
+  if(p.get('loggedin')==='1'){showToast('✅ Sesión iniciada!');history.replaceState({},'','/')}
+  if(p.get('error')==='invalid_token'){showToast('❌ Link inválido o expirado.');history.replaceState({},'','/')}
+}
+function renderUserArea(){
+  const ua=document.getElementById('user-area');
+  const bl=document.getElementById('btn-login-header');
+  const blSidebar=document.getElementById('sidebar-login-btn');
+  const uaActions=document.getElementById('sidebar-user-actions');
+  const cb=document.getElementById('credit-badge');
+  const emailEl=document.getElementById('user-email-display');
+  const planEl=document.getElementById('user-plan-display');
+  const avatarEl=document.getElementById('user-avatar-letter');
+  if(currentUser){
+    ua.style.display='flex';
+    if(bl) bl.style.display='none';
+    if(blSidebar) blSidebar.style.display='none';
+    if(uaActions) uaActions.style.display='flex';
+    const c=currentUser.plan==='unlimited'?'∞':(currentUser.credits||0);
+    if(cb) cb.textContent=`🎬 ${c} crédito${c===1?'':'s'}`;
+    if(emailEl) emailEl.textContent=currentUser.email||'usuario';
+    if(planEl) planEl.textContent=currentUser.plan==='unlimited'?'Plan Unlimited':currentUser.plan==='pro'?'Plan Pro':currentUser.plan==='starter'?'Plan Starter':'Free';
+    if(avatarEl) avatarEl.textContent=(currentUser.email||'U')[0].toUpperCase();
+  } else {
+    ua.style.display='none';
+    if(bl) bl.style.display='block';
+    if(blSidebar) blSidebar.style.display='block';
+    if(uaActions) uaActions.style.display='none';
+  }
+}
+function showLoginModal(){document.getElementById('login-modal').style.display='flex';setTimeout(()=>document.getElementById('login-email').focus(),100)}
+function closeLoginModal(e){if(e.target===document.getElementById('login-modal'))document.getElementById('login-modal').style.display='none'}
+function showPricingModal(){if(!currentUser){showLoginModal();return}showPlansStep();document.getElementById('pricing-modal').style.display='flex'}
+function closePricingModal(e){if(!e||e.target===document.getElementById('pricing-modal'))document.getElementById('pricing-modal').style.display='none'}
+async function sendMagicLink(){
+  const email=document.getElementById('login-email').value.trim(); if(!email)return;
+  const msg=document.getElementById('login-msg'); msg.innerHTML='Enviando...';
+  const res=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+  const data=await res.json();
+  if(data.ok){msg.innerHTML=`<div style="text-align:center"><div style="color:var(--green);margin-bottom:12px">✅ Link listo — haz click para entrar:</div><a href="${data.link}" style="display:inline-block;background:var(--blue);color:#fff;font-weight:700;padding:12px 24px;border-radius:var(--rs);text-decoration:none;font-size:.9rem">🚀 Iniciar Sesión</a><div style="color:var(--t3);font-size:.7rem;margin-top:10px">Expira en 15 min</div></div>`}
+  else{msg.innerHTML=`<span style="color:var(--red)">❌ ${data.error||'Error'}</span>`}
+}
+async function logout(){await fetch('/auth/logout',{method:'POST'});currentUser=null;renderUserArea();showToast('Sesión cerrada')}
+
+// PAYMENTS
+let stripeInstance=null,stripeElements=null,currentPlan=null;
+async function selectPlan(plan){
+  if(!currentUser){closePricingModal();showLoginModal();return}
+  currentPlan=plan;
+  document.getElementById('step-plans').style.display='none'; document.getElementById('step-payment').style.display='block';
+  const meta={starter:{name:'Starter Pack',desc:'10 videos doblados al español',amount:'$9'},pro:{name:'Pro Pack',desc:'25 videos doblados al español',amount:'$19'},unlimited:{name:'Unlimited',desc:'Videos ilimitados por mes',amount:'$49/mo'}}[plan];
+  document.getElementById('pay-plan-name').textContent=meta.name; document.getElementById('pay-plan-desc').textContent=meta.desc; document.getElementById('pay-amount').textContent=meta.amount;
+  document.getElementById('payment-element').innerHTML='<div style="text-align:center;padding:20px;color:var(--t3)">⏳ Cargando...</div>';
+  const res=await fetch('/pay/intent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});
+  const data=await res.json();
+  if(data.checkoutUrl){window.location.href=data.checkoutUrl;return}
+  if(data.error){showToast('Error: '+data.error);showPlansStep();return}
+  if(!stripeInstance){await loadStripeJS();stripeInstance=Stripe(data.publishableKey)}
+  const appearance={theme:'night',variables:{colorPrimary:'#3b82f6',colorBackground:'#13131f',colorSurface:'#1a1a28',colorText:'#f8fafc',colorDanger:'#ef4444',fontFamily:'Inter,system-ui,sans-serif',borderRadius:'8px'}};
+  stripeElements=stripeInstance.elements({clientSecret:data.clientSecret,appearance});
+  const payEl=stripeElements.create('payment',{layout:'tabs'});
+  document.getElementById('payment-element').innerHTML=''; payEl.mount('#payment-element');
+}
+function showPlansStep(){document.getElementById('step-plans').style.display='block';document.getElementById('step-payment').style.display='none';document.getElementById('pay-error').style.display='none'}
+async function submitPayment(){
+  const btn=document.getElementById('btn-pay-now'),errEl=document.getElementById('pay-error'),btnText=document.getElementById('pay-btn-text');
+  btn.disabled=true; btnText.textContent='⏳ Procesando...'; errEl.style.display='none';
+  const{error}=await stripeInstance.confirmPayment({elements:stripeElements,confirmParams:{return_url:`${window.location.origin}/?payment=success&plan=${currentPlan}`}});
+  if(error){errEl.textContent=error.message;errEl.style.display='block';btn.disabled=false;btnText.textContent='🔒 Pagar Ahora'}
+}
+function loadStripeJS(){return new Promise(r=>{if(window.Stripe){r();return}const s=document.createElement('script');s.src='https://js.stripe.com/v3/';s.onload=r;document.head.appendChild(s)})}
+
+// DUB SETTINGS
+let selectedSpeakers=0;
+function toggleDubSettings(){document.getElementById('dub-settings').classList.toggle('open')}
+function setSpeakers(val){selectedSpeakers=val;document.querySelectorAll('.spk-btn').forEach(b=>b.classList.toggle('active',Number(b.dataset.val)===val));updatePreview()}
+const optState={'voice-clone':true,'lipsync':true,'captions':true,'audio-only':false,'scene-detect':true,'no-cut':true};
+function setOpt(key,val){
+  optState[key]=val;
+  const el=document.getElementById('tog-'+key);
+  if(!el)return;
+  el.querySelectorAll('.opt-btn').forEach((btn,i)=>{btn.classList.toggle('active',i===0?val:!val);});
+  updatePreview();
+}
+function getDubSettings(){return{output_language:document.getElementById('dub-language').value,enable_voice_clone:optState['voice-clone'],translate_audio_only:optState['audio-only'],caption:optState['captions'],lipsync:optState['lipsync'],scene_detection:optState['scene-detect'],no_cut:optState['no-cut'],speaker_num:selectedSpeakers}}
+function updatePreview(){const s=getDubSettings();const lang=s.output_language.replace('Spanish','ES').replace(/[()]/g,'').replace('  ',' ').trim();const parts=[lang,s.enable_voice_clone?'Voz clonada':'Voz genérica',s.lipsync?'Lip sync':'Sin lip sync',s.caption?'Subtítulos':'Sin subtítulos',s.translate_audio_only?'Solo audio':'Video completo',s.no_cut?'🎬 Sin cortar':'Auto-clips',selectedSpeakers===0?'Spk: Auto':`Spk: ${selectedSpeakers}`];document.getElementById('preview-text').textContent=parts.join(' · ')}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('dub-settings').classList.add('open');
+  document.getElementById('creator-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')addCreator()});
+  // Load all existing jobs on page load (SSE snapshot only covers active jobs)
+  loadJobsFromAPI();
+  loadCreators();
+});
+
+// CREATORS
+let creators=[],activeCreator=null,creatorVideos={videos:[],shorts:[]},selectedVideos=new Set(),activeTab='videos';
+async function loadCreators(){const res=await fetch('/api/creators');creators=await res.json();renderCreators()}
+function renderCreators(){
+  const grid=document.getElementById('creators-grid');
+  if(!creators.length){grid.innerHTML='<div class="creators-empty">Agrega tus creadores favoritos de YouTube para ver sus últimos videos rápidamente.</div>';return}
+  grid.innerHTML=creators.map(c=>`
+    <div class="creator-card" id="creator-${c.id}">
+      <div class="creator-top">
+        <div class="creator-avatar">${(c.name||'?')[0].toUpperCase()}</div>
+        <div class="creator-info">
+          <div class="creator-name">${escHtml(c.name||c.url)}</div>
+          <div class="creator-url">${escHtml(c.url.replace('https://www.youtube.com/',''))}</div>
+        </div>
+        <button class="creator-del" onclick="deleteCreator('${c.id}')" title="Eliminar">✕</button>
+      </div>
+      <div class="creator-btns">
+        <button class="btn-fetch-vids" id="fetch-btn-${c.id}" onclick="fetchCreatorVideos('${c.id}')">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Últimos 5
+        </button>
+        <button class="btn-browse-all" id="browse-btn-${c.id}" onclick="openBrowseAll('${c.id}')">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Ver todo
+        </button>
+      </div>
+    </div>`).join('');
+}
+async function addCreator(){
+  const input=document.getElementById('creator-input').value.trim(), msg=document.getElementById('add-creator-msg'), btn=document.getElementById('btn-add-creator-submit');
+  if(!input) return;
+  btn.textContent='⏳ Resolviendo...'; btn.disabled=true; msg.textContent='Detectando canal...';
+  try{
+    const res=await fetch('/api/creators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:input})});
+    const data=await res.json();
+    if(!res.ok){msg.textContent='❌ '+data.error;return}
+    creators.push(data); renderCreators();
+    document.getElementById('creator-input').value=''; msg.textContent='✅ Creador agregado!';
+    setTimeout(closeAddCreatorModal,1200);
+  }catch(e){msg.textContent='❌ Error: '+e.message}
+  finally{btn.textContent='➕ Agregar Creador';btn.disabled=false}
+}
+async function deleteCreator(id){
+  if(!confirm('¿Eliminar este creador?')) return;
+  await fetch('/api/creators/'+id,{method:'DELETE'});
+  creators=creators.filter(c=>c.id!==id); renderCreators();
+  if(activeCreator?.id===id){document.getElementById('creator-videos-panel').style.display='none';activeCreator=null}
+}
+async function fetchCreatorVideos(id){
+  const creator=creators.find(c=>c.id===id); if(!creator) return;
+  const btn=document.getElementById('fetch-btn-'+id);
+  btn.disabled=true; btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg> Cargando...';
+  try{
+    const res=await fetch('/api/creators/'+id+'/videos'); const data=await res.json();
+    if(!res.ok){showToast('Error: '+data.error);return}
+    activeCreator=creator; creatorVideos=data; selectedVideos.clear(); activeTab='videos';
+    renderVideosPanel();
+    document.getElementById('creator-videos-panel').style.display='block';
+    document.getElementById('creator-videos-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){showToast('Error: '+e.message)}
+  finally{btn.disabled=false;btn.innerHTML='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Últimos 5'}
+}
+function renderVideosPanel(){
+  const panel=document.getElementById('creator-videos-panel');
+  const list=activeTab==='videos'?creatorVideos.videos:creatorVideos.shorts;
+  const isShorts=activeTab==='shorts';
+  panel.innerHTML=`<div class="cvp-inner">
+    <div class="cvp-header">
+      <span class="cvp-title">📺 ${escHtml(activeCreator.name)}</span>
+      <button class="cvp-close" onclick="document.getElementById('creator-videos-panel').style.display='none'">✕</button>
+    </div>
+    <div class="cvp-tabs">
+      <button class="cvp-tab ${activeTab==='videos'?'active':''}" onclick="switchTab('videos')">🎬 Videos (${creatorVideos.videos.length})</button>
+      <button class="cvp-tab ${activeTab==='shorts'?'active':''}" onclick="switchTab('shorts')">⚡ Shorts (${creatorVideos.shorts.length})</button>
+    </div>
+    <div class="video-list">${list.length?list.map(v=>renderVideoItem(v,isShorts)).join(''):'<div style="padding:20px;text-align:center;color:var(--t3)">No se encontraron videos</div>'}</div>
+    <div class="cvp-footer">
+      <span class="cvp-selected-count" id="selected-count">${selectedVideos.size} seleccionado(s)</span>
+      <button class="btn-add-queue" id="btn-queue-selected" onclick="addSelectedToQueue()" ${!selectedVideos.size?'disabled':''}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Agregar a cola
+      </button>
+    </div>
+  </div>`;
+}
+function renderVideoItem(v,isShort){
+  const sel=selectedVideos.has(v.url), dur=v.duration?fmtDur(v.duration):'';
+  return `<div class="video-item ${sel?'selected':''}" onclick="toggleVideo('${escAttr(v.url)}',this)">
+    <img class="video-thumb ${isShort?'video-thumb-short':''}" src="${escAttr(v.thumbnail)}" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${escAttr(v.id)}/mqdefault.jpg'"/>
+    <div class="video-info"><div class="video-title">${escHtml(v.title)}</div>${dur?`<div class="video-dur">⏱ ${dur}</div>`:''}</div>
+    <div class="video-check">${sel?'✓':''}</div>
+  </div>`;
+}
+function toggleVideo(url,el){if(selectedVideos.has(url)){selectedVideos.delete(url);el.classList.remove('selected');el.querySelector('.video-check').textContent=''}else{selectedVideos.add(url);el.classList.add('selected');el.querySelector('.video-check').textContent='✓'};document.getElementById('selected-count').textContent=selectedVideos.size+' seleccionado(s)';document.getElementById('btn-queue-selected').disabled=!selectedVideos.size}
+function switchTab(tab){activeTab=tab;renderVideosPanel()}
+async function addSelectedToQueue(){if(!selectedVideos.size)return;const urls=[...selectedVideos];document.getElementById('creator-videos-panel').style.display='none';selectedVideos.clear();const existing=document.getElementById('url-input').value.trim();document.getElementById('url-input').value=(existing?existing+'\n':'')+urls.join('\n');renderQueuePreview();window.scrollTo({top:0,behavior:'smooth'});showToast(`✅ ${urls.length} video(s) agregado(s) — configura el doblaje y presiona Procesar`);}
+function fmtDur(s){s=Math.round(s);const m=Math.floor(s/60),h=Math.floor(m/60);if(h>0)return`${h}:${String(m%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;return`${m}:${String(s%60).padStart(2,'0')}`}
+
+// BROWSE ALL
+let browseState={creatorId:null,tab:'videos',page:1,sort:'newest',search:'',items:[],hasMore:false,selected:new Set(),searchTimer:null};
+async function openBrowseAll(creatorId){
+  const creator=creators.find(c=>c.id===creatorId); if(!creator) return;
+  browseState={creatorId,tab:'videos',page:1,sort:'newest',search:'',items:[],hasMore:false,selected:new Set(),searchTimer:null};
+  document.getElementById('browse-avatar').textContent=(creator.name||'?')[0].toUpperCase();
+  document.getElementById('browse-creator-name').textContent=creator.name||creator.url;
+  document.getElementById('browse-creator-url').textContent=creator.url.replace('https://www.youtube.com/','');
+  document.getElementById('browse-search').value=''; document.getElementById('browse-sort').value='newest'; document.getElementById('browse-select-all-chk').checked=false;
+  setBrowseTabUI('videos'); document.getElementById('browse-panel').style.display='flex'; document.body.style.overflow='hidden';
+  await loadBrowsePage(true);
+}
+function closeBrowseAll(){document.getElementById('browse-panel').style.display='none';document.body.style.overflow=''}
+function setBrowseTab(tab){if(browseState.tab===tab)return;browseState.tab=tab;browseState.page=1;browseState.items=[];browseState.selected.clear();setBrowseTabUI(tab);document.getElementById('browse-select-all-chk').checked=false;loadBrowsePage(true)}
+function setBrowseTabUI(tab){document.getElementById('btab-videos').classList.toggle('active',tab==='videos');document.getElementById('btab-shorts').classList.toggle('active',tab==='shorts')}
+function onBrowseSearch(val){clearTimeout(browseState.searchTimer);browseState.searchTimer=setTimeout(()=>{browseState.search=val;browseState.page=1;browseState.items=[];loadBrowsePage(true)},400)}
+function onBrowseSort(val){browseState.sort=val;browseState.page=1;browseState.items=[];loadBrowsePage(true)}
+async function loadBrowsePage(reset=false){
+  const grid=document.getElementById('browse-grid'), loadBtn=document.getElementById('browse-load-more'), btn=document.querySelector('.btn-load-more');
+  if(reset){grid.innerHTML='<div class="browse-loading">⏳ Cargando...</div>';loadBtn.style.display='none'}
+  else{if(btn){btn.disabled=true;btn.textContent='⏳ Cargando...'}}
+  const params=new URLSearchParams({type:browseState.tab,page:browseState.page,limit:20,sort:browseState.sort,search:browseState.search});
+  try{
+    const res=await fetch(`/api/creators/${browseState.creatorId}/browse?${params}`); const data=await res.json();
+    if(!res.ok){grid.innerHTML=`<div class="browse-loading" style="color:var(--red)">❌ ${data.error}</div>`;return}
+    if(reset){browseState.items=data.items;grid.innerHTML=data.items.length?data.items.map(v=>browsCardHTML(v)).join(''):'<div class="browse-loading">No se encontraron videos</div>'}
+    else{browseState.items.push(...data.items);if(data.items.length)grid.insertAdjacentHTML('beforeend',data.items.map(v=>browsCardHTML(v)).join(''))}
+    browseState.hasMore=data.hasMore; loadBtn.style.display=data.hasMore?'block':'none';
+    if(btn){btn.disabled=false;btn.textContent='Cargar más videos ↓'}
+    updateBrowseCount();
+  }catch(e){grid.innerHTML=`<div class="browse-loading" style="color:var(--red)">❌ ${e.message}</div>`}
+}
+async function loadMoreBrowse(){browseState.page++;await loadBrowsePage(false)}
+function browsCardHTML(v){
+  const isShort=browseState.tab==='shorts', dur=v.duration?fmtDur(v.duration):'', date=v.date?formatDate(v.date):'', views=v.views?formatViews(v.views):'', sel=browseState.selected.has(v.url);
+  return `<div class="browse-video-card ${sel?'selected':''}" onclick="toggleBrowseVideo('${escAttr(v.url)}',this)" data-url="${escAttr(v.url)}">
+    <div class="browse-thumb-wrap ${isShort?'short-thumb':''}">
+      <img class="browse-thumb" src="${escAttr(v.thumbnail)}" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${escAttr(v.id)}/mqdefault.jpg'"/>
+      ${dur?`<div class="browse-dur-badge">${dur}</div>`:''}
+      <div class="browse-check-badge">${sel?'✓':''}</div>
+    </div>
+    <div class="browse-card-body"><div class="browse-card-title">${escHtml(v.title)}</div><div class="browse-card-meta">${[date,views].filter(Boolean).join(' · ')}</div></div>
+  </div>`;
+}
+function toggleBrowseVideo(url,el){if(browseState.selected.has(url)){browseState.selected.delete(url);el.classList.remove('selected');el.querySelector('.browse-check-badge').textContent=''}else{browseState.selected.add(url);el.classList.add('selected');el.querySelector('.browse-check-badge').textContent='✓'};updateBrowseCount();const all=document.querySelectorAll('.browse-video-card');document.getElementById('browse-select-all-chk').checked=all.length>0&&[...all].every(c=>c.classList.contains('selected'))}
+function toggleSelectAll(checked){document.querySelectorAll('.browse-video-card').forEach(card=>{const url=card.dataset.url;if(checked){browseState.selected.add(url);card.classList.add('selected');card.querySelector('.browse-check-badge').textContent='✓'}else{browseState.selected.delete(url);card.classList.remove('selected');card.querySelector('.browse-check-badge').textContent=''}});updateBrowseCount()}
+function updateBrowseCount(){const n=browseState.selected.size;document.getElementById('browse-selected-count').textContent=`${n} seleccionado(s)`;document.getElementById('btn-browse-queue').disabled=n===0}
+async function addBrowseToQueue(){const urls=[...browseState.selected];if(!urls.length)return;closeBrowseAll();const existing=document.getElementById('url-input').value.trim();document.getElementById('url-input').value=(existing?existing+'\n':'')+urls.join('\n');renderQueuePreview();window.scrollTo({top:0,behavior:'smooth'});showToast(`✅ ${urls.length} video(s) agregado(s) — configura el doblaje y presiona Procesar`);}
+function formatDate(d){if(!d||d.length<8)return'';return`${d.slice(6,8)}/${d.slice(4,6)}/${d.slice(0,4)}`}
+function formatViews(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M views';if(n>=1e3)return(n/1e3).toFixed(0)+'K views';return n+' views'}
+function showAddCreatorModal(){document.getElementById('add-creator-modal').style.display='flex';setTimeout(()=>document.getElementById('creator-input').focus(),100)}
+function closeAddCreatorModal(e){if(!e||e.target===document.getElementById('add-creator-modal')){document.getElementById('add-creator-modal').style.display='none';document.getElementById('add-creator-msg').textContent=''}}
+async function deleteJob(id){if(!confirm('¿Eliminar este trabajo?'))return;await fetch('/api/jobs/'+id,{method:'DELETE'});delete state.jobs[id];const el=document.getElementById('job-'+id);if(el)el.remove();renderAllJobs()}
+
+async function loadJobsFromAPI() {
+  const dot = document.getElementById('jobs-status-dot');
+  try {
+    const res = await fetch('/api/jobs');
+    if (!res.ok) { if(dot) dot.textContent='Error'; return; }
+    const jobs = await res.json();
+    jobs.forEach(j => { state.jobs[j.id] = j; });
+    renderAllJobs();
+  } catch(e) {
+    console.warn('[Jobs] loadJobsFromAPI failed:', e);
+    if(dot) dot.textContent='Error de conexión';
+  }
+}
+
+function renderQueuePreview(){
+  const ta=document.getElementById('url-input');
+  const urls=ta.value.split('\n').map(u=>u.trim()).filter(u=>u.length>0);
+  const preview=document.getElementById('queue-preview');
+  const list=document.getElementById('queue-list');
+  if(!urls.length){preview.style.display='none';return;}
+  preview.style.display='block';
+  list.innerHTML=urls.map((u,i)=>`
+    <div class="queue-item" id="qitem-${i}">
+      <div class="queue-item-num">${i+1}</div>
+      <div class="queue-item-url" title="${u}">${u.replace('https://www.youtube.com/','yt/').replace('https://youtu.be/','yt/')}</div>
+      <button class="queue-item-del" onclick="removeQueueItem(${i})" title="Quitar">✕</button>
+    </div>`).join('');
+}
+function removeQueueItem(idx){
+  const ta=document.getElementById('url-input');
+  const urls=ta.value.split('\n').map(u=>u.trim()).filter(u=>u.length>0);
+  urls.splice(idx,1); ta.value=urls.join('\n'); renderQueuePreview();
+}
+function clearQueue(){ document.getElementById('url-input').value=''; renderQueuePreview(); }
+document.getElementById('url-input').addEventListener('input',renderQueuePreview);
+
+function switchPage(page) {
+  document.getElementById('page-dashboard').style.display = page === 'dashboard' ? 'flex' : 'none';
+  document.getElementById('page-agents').style.display = page === 'agents' ? 'flex' : 'none';
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-' + page)?.classList.add('active');
+  document.querySelector('.topbar-title').textContent = page === 'agents' ? '🤖 Agent Mode' : 'Dashboard';
+  if (page === 'agents') loadAgents();
+}
+
+// ── AGENT MODE ──────────────────────────────────────────────────────────
+let agentState = { agents: [], selectedProfiles: new Set(), shortsCount: 5, bufferOrgId: null };
+const agentOptState = { 'voice-clone': true, 'lipsync': true, 'captions': true };
+
+async function loadAgents() {
+  try {
+    const res = await fetch('/api/agents');
+    const agents = await res.json();
+    agentState.agents = agents;
+    renderAgents();
+  } catch(e) { console.error('loadAgents:', e); }
+}
+
+function renderAgents() {
+  const grid = document.getElementById('agents-grid');
+  if (!agentState.agents.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--t3)">
+      <div style="font-size:2rem;margin-bottom:12px">🤖</div>
+      <div style="font-size:.88rem;font-weight:600;margin-bottom:6px">No hay agentes aún</div>
+      <div style="font-size:.78rem">Crea tu primer agente para comenzar la automatización</div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = agentState.agents.map(a => buildAgentCard(a)).join('');
+}
+
+function buildAgentCard(a) {
+  const statusLabels = { idle: 'Listo', running: 'Corriendo', error: 'Error', paused: 'Pausado' };
+  const lastLog = ''; // would need logs API
+  const lastRun = a.lastRun ? new Date(a.lastRun).toLocaleString('es-ES') : 'Nunca';
+  const lastChecked = a.lastCheckedAt ? timeAgo(a.lastCheckedAt) : 'Nunca';
+  const nextRun = `Diario a las ${String(a.schedule?.cronHour || 6).padStart(2,'0')}:00`;
+  return `<div class="agent-card" id="acard-${a.id}">
+    <div class="agent-card-header">
+      <div class="agent-status-dot ${a.status}"></div>
+      <div class="agent-meta">
+        <div class="agent-name">${escHtml(a.name)}</div>
+        <div class="agent-channel">${escHtml(a.channelName || a.channelUrl)}</div>
+      </div>
+      <span class="agent-badge ${a.status}">${statusLabels[a.status] || a.status}</span>
+    </div>
+    <div class="agent-stats">
+      <div class="agent-stat"><div class="agent-stat-val">${a.stats?.totalRuns || 0}</div><div class="agent-stat-label">Ejecuciones</div></div>
+      <div class="agent-stat"><div class="agent-stat-val">${a.stats?.totalClips || 0}</div><div class="agent-stat-label">Clips</div></div>
+      <div class="agent-stat"><div class="agent-stat-val">${a.stats?.totalPosted || 0}</div><div class="agent-stat-label">Publicados</div></div>
+    </div>
+    <div class="agent-schedule" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite"></span>
+        <span style="color:var(--green);font-weight:700;font-size:.7rem">MONITOREANDO</span>
+        <span style="color:var(--t3)">· Revisado: ${lastChecked}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;color:var(--t3)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ${nextRun} · ${a.shortsCount} por ejecución · Último run: ${lastRun}
+      </div>
+    </div>
+    ${a.lastError ? `<div class="job-error-msg" style="margin:8px 12px">❌ ${escHtml(a.lastError)}</div>` : ''}
+    <div class="agent-actions">
+      <button class="btn-agent-run" onclick="runAgent('${a.id}')" ${a.status === 'running' ? 'disabled' : ''}>
+        ${a.status === 'running' ? '⚙️ Corriendo…' : '▶ Ejecutar ahora'}
+      </button>
+      <button class="btn-agent-logs" onclick="showAgentLogs('${a.id}','${escAttr(a.name)}')">📋 Logs</button>
+      <button class="btn-agent-pause" onclick="toggleAgent('${a.id}')">${a.status === 'paused' ? '▶ Activar' : '⏸ Pausar'}</button>
+      <button class="btn-agent-del" onclick="deleteAgent('${a.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+
+async function runAgent(id) {
+  const res = await fetch(`/api/agents/${id}/run`, { method: 'POST' });
+  const data = await res.json();
+  if (data.ok) { showToast('✅ Agente iniciado'); loadAgents(); }
+  else showToast('❌ ' + data.error);
+}
+
+async function toggleAgent(id) {
+  const res = await fetch(`/api/agents/${id}/toggle`, { method: 'POST' });
+  if (res.ok) { showToast('✅ Estado cambiado'); loadAgents(); }
+}
+
+async function deleteAgent(id) {
+  if (!confirm('¿Eliminar este agente?')) return;
+  await fetch(`/api/agents/${id}`, { method: 'DELETE' });
+  showToast('Agente eliminado');
+  loadAgents();
+}
+
+async function showAgentLogs(id, name) {
+  document.getElementById('agent-logs-panel').style.display = 'block';
+  document.getElementById('agent-logs-title').textContent = `📋 Logs — ${name}`;
+  const stream = document.getElementById('agent-log-stream');
+  stream.innerHTML = '<div style="color:var(--t3);padding:10px">Cargando...</div>';
+  const res = await fetch(`/api/agents/${id}/logs`);
+  const logs = await res.json();
+  if (!logs.length) { stream.innerHTML = '<div style="color:var(--t3);padding:10px;text-align:center">Sin logs aún</div>'; return; }
+  stream.innerHTML = logs.map(l => {
+    const t = new Date(l.ts).toLocaleTimeString('es-ES');
+    return `<div class="log-entry ${l.type || 'info'}"><span class="log-ts">${t}</span><span class="log-msg">${escHtml(l.message)}</span></div>`;
+  }).join('');
+  stream.scrollTop = 0;
+}
+
+// CREATE AGENT MODAL
+let agentStep = 1;
+function showCreateAgentModal() { agentStep = 1; goAgentStep(1); document.getElementById('create-agent-modal').style.display = 'flex'; }
+function closeCreateAgentModal() { document.getElementById('create-agent-modal').style.display = 'none'; }
+function goAgentStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById(`agent-step-${i}`);
+    if (el) el.style.display = i === n ? 'block' : 'none';
+    const step = document.getElementById(`astep-${i}`);
+    if (step) { step.classList.toggle('active', i === n); step.classList.toggle('done', i < n); }
+  }
+  agentStep = n;
+}
+
+let agentContentType = 'shorts';
+function selectContentType(btn, val) {
+  btn.closest('.shorts-count-grid').querySelectorAll('.shorts-count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  agentContentType = val;
+}
+
+function selectShortsCount(btn, val) {
+  btn.closest('.shorts-count-grid').querySelectorAll('.shorts-count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  agentState.shortsCount = val;
+}
+
+function setAgentOpt(key, val) {
+  agentOptState[key] = val;
+  const el = document.getElementById(`atog-${key}`);
+  if (!el) return;
+  el.querySelectorAll('.opt-btn').forEach((btn, i) => btn.classList.toggle('active', i === 0 ? val : !val));
+}
+
+let bufferLoadTimer;
+async function loadBufferProfiles() {
+  clearTimeout(bufferLoadTimer);
+  bufferLoadTimer = setTimeout(async () => {
+    const token = document.getElementById('agent-buffer-token').value.trim();
+    if (!token || token.length < 20) return;
+    document.getElementById('buffer-loading').style.display = 'block';
+    document.getElementById('buffer-profiles-list').style.display = 'none';
+    try {
+      const res = await fetch(`/api/buffer/channels?token=${encodeURIComponent(token)}`);
+      const data = await res.json();
+      agentState.bufferOrgId = data.orgId;
+      const channels = data.channels || [];
+      const items = document.getElementById('buffer-profiles-items');
+      items.innerHTML = channels.map(c => `
+        <div class="buffer-profile-item" id="bprof-${c.id}" onclick="toggleBufferProfile('${c.id}')">
+          <div class="buffer-profile-avatar">${c.service === 'tiktok' ? '🎵' : c.service === 'instagram' ? '📸' : c.service === 'youtube' ? '▶' : '📱'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.8rem;font-weight:700">${escHtml(c.name)}</div>
+            <div style="font-size:.68rem;color:var(--t3)">${c.service}</div>
+          </div>
+          <div id="bcheck-${c.id}" style="color:var(--t3);font-size:.9rem">○</div>
+        </div>`).join('');
+      document.getElementById('buffer-profiles-list').style.display = 'block';
+      // Auto-select TikTok
+      channels.filter(c => c.service === 'tiktok').forEach(c => toggleBufferProfile(c.id));
+    } catch(e) { showToast('❌ Error cargando Buffer: ' + e.message); }
+    document.getElementById('buffer-loading').style.display = 'none';
+  }, 600);
+}
+
+function toggleBufferProfile(id) {
+  if (agentState.selectedProfiles.has(id)) {
+    agentState.selectedProfiles.delete(id);
+    document.getElementById(`bprof-${id}`)?.classList.remove('selected');
+    if (document.getElementById(`bcheck-${id}`)) document.getElementById(`bcheck-${id}`).textContent = '○';
+  } else {
+    agentState.selectedProfiles.add(id);
+    document.getElementById(`bprof-${id}`)?.classList.add('selected');
+    if (document.getElementById(`bcheck-${id}`)) document.getElementById(`bcheck-${id}`).textContent = '✓';
+  }
+}
+
+async function submitCreateAgent() {
+  const name = document.getElementById('agent-name').value.trim();
+  const channelUrl = document.getElementById('agent-channel-url').value.trim();
+  if (!name || !channelUrl) { showToast('Completa el nombre y URL del canal'); goAgentStep(1); return; }
+  const errEl = document.getElementById('create-agent-error');
+  errEl.style.display = 'none';
+  const btn = document.getElementById('btn-create-agent-submit');
+  btn.disabled = true; btn.textContent = '⏳ Creando...';
+  try {
+    const res = await fetch('/api/agents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        channelUrl,
+        shortsCount: agentState.shortsCount,
+        contentType: agentContentType,
+        watchMode: true,
+        dubSettings: {
+          output_language: document.getElementById('agent-language').value,
+          enable_voice_clone: agentOptState['voice-clone'],
+          lipsync: agentOptState['lipsync'],
+          caption: agentOptState['captions'],
+          no_cut: true,
+        },
+        schedule: {
+          enabled: true,
+          cronHour: parseInt(document.getElementById('agent-cron-hour').value),
+          times: [
+            document.getElementById('agent-time-1').value,
+            document.getElementById('agent-time-2').value,
+            document.getElementById('agent-time-3').value,
+          ],
+        },
+        bufferProfileIds: [...agentState.selectedProfiles],
+        bufferAccessToken: document.getElementById('agent-buffer-token').value.trim(),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error creating agent');
+    closeCreateAgentModal();
+    showToast('✅ Agente creado!');
+    loadAgents();
+  } catch(e) {
+    errEl.textContent = '❌ ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = '🚀 Crear Agente';
+  }
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return `hace ${d}d`;
+  if (h > 0) return `hace ${h}h`;
+  if (m > 0) return `hace ${m}min`;
+  return 'ahora mismo';
+}
+
+// ── PUBLISH MODAL ──
+const HASHTAG_PRESETS = {
+  taxes:   ['#impuestos','#taxes','#taxseason','#temporadadetaxes','#declaraciondeimpuestos','#taxeslatinos','#taxesmiami','#floridataxes','#taxesfl','#mrfinancebizz'],
+  finance: ['#finanzaspersonales','#dinerotips','#finanzaslatinas','#ahorro','#inversiones','#libertadfinanciera','#dinero','#finances','#money','#wealthbuilding'],
+  default: ['#viral','#parati','#foryou','#fyp','#foryoupage','#trending','#tiktoklatino','#hispanictiktok','#latinos','#miami'],
+};
+
+async function fetchAIHashtags(clip) {
+  try {
+    document.getElementById('pub-hashtags-loading').style.display = 'block';
+    document.getElementById('pub-hashtags-display').style.opacity = '0.4';
+    const res = await fetch('/api/generate-hashtags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        videoTitle: clip.videoTitle || '',
+        transcriptSnippet: clip.transcriptSnippet || '',
+        titles: clip.titles || []
+      })
+    });
+    const data = await res.json();
+    document.getElementById('pub-hashtags-display').textContent = data.hashtags || '';
+    document.getElementById('pub-hashtags-display').style.opacity = '1';
+    updatePubCaption();
+  } catch(e) {
+    document.getElementById('pub-hashtags-display').textContent = '#viral #parati #fyp #trending #latinos #miami #finanzas';
+    document.getElementById('pub-hashtags-display').style.opacity = '1';
+    updatePubCaption();
+  } finally {
+    document.getElementById('pub-hashtags-loading').style.display = 'none';
+  }
+}
+
+async function regenerateHashtags() {
+  if (!pubState.clip) return;
+  await fetchAIHashtags(pubState.clip);
+}
+
+// State for publish modal
+let pubState = { jobId: null, clipIndex: null, clip: null, selectedTitle: 0 };
+
+function openPublishModal(jobId, clipId) {
+  const job = state.jobs[jobId];
+  if (!job || !job.clips) return showToast('Job no encontrado');
+  const clipIndex = job.clips.findIndex((c,i) => (c.id || c.filename || String(i)) === clipId);
+  if (clipIndex === -1) return showToast('Clip no encontrado');
+  const clip = job.clips[clipIndex];
+
+  pubState = { jobId, clipIndex, clip, selectedTitle: 0 };
+
+  // Build title options
+  const titles = clip.titles || ['Sin título'];
+  const titlesList = document.getElementById('pub-titles-list');
+  titlesList.innerHTML = titles.map((t, i) => `
+    <div class="pub-title-option${i===0?' selected':''}" onclick="selectPubTitle(${i})" id="pub-title-opt-${i}">
+      <div class="pub-title-radio"></div>
+      <div class="pub-title-text">${escHtml(t)}</div>
+    </div>`).join('');
+
+  // Hashtags — seed with presets instantly, then fetch AI version
+  const cat = /tax|impuesto|declar|itin|irs|reembolso/.test((titles||[]).join(' ').toLowerCase()) ? 'taxes'
+    : /inver|ahorro|dinero|financ|money|wealth|crypto|stock/.test((titles||[]).join(' ').toLowerCase()) ? 'finance' : 'default';
+  const seed = [...new Set([...HASHTAG_PRESETS[cat], ...HASHTAG_PRESETS.default])].slice(0,15).join(' ');
+  document.getElementById('pub-hashtags-display').textContent = seed;
+
+  // Caption preview (editable textarea)
+  updatePubCaption();
+
+  // Fire AI hashtag generation in background
+  fetchAIHashtags(clip);
+
+  // Default date = tomorrow, time = 09:00
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('pub-date').value = tomorrow.toISOString().split('T')[0];
+  document.getElementById('pub-time').value = '09:00';
+  document.getElementById('pub-custom-time-row').style.display = 'none';
+  document.getElementById('pub-time').onchange = function() {
+    document.getElementById('pub-custom-time-row').style.display = this.value === 'custom' ? 'block' : 'none';
+    updatePubCaption();
+  };
+
+  document.getElementById('pub-status-msg').textContent = '';
+  document.getElementById('btn-publish-now').disabled = false;
+  document.getElementById('publish-modal').style.display = 'flex';
+}
+
+function selectPubTitle(i) {
+  pubState.selectedTitle = i;
+  document.querySelectorAll('.pub-title-option').forEach((el, idx) => {
+    el.classList.toggle('selected', idx === i);
+  });
+  updatePubCaption();
+}
+
+function updatePubCaption() {
+  const titles = pubState.clip?.titles || ['Sin título'];
+  const title = titles[pubState.selectedTitle] || titles[0];
+  const hashtags = document.getElementById('pub-hashtags-display')?.textContent || '';
+  const ta = document.getElementById('pub-caption-preview');
+  if (ta) { ta.value = `${title}\n\n${hashtags}`; syncCaptionFromTextarea(); }
+}
+
+function syncCaptionFromTextarea() {
+  const ta = document.getElementById('pub-caption-preview');
+  const counter = document.getElementById('pub-char-count');
+  if (!ta || !counter) return;
+  const len = ta.value.length;
+  counter.textContent = `${len}/150`;
+  counter.style.color = len > 150 ? 'var(--red)' : len > 120 ? 'var(--yellow)' : 'var(--green)';
+}
+
+function closePublishModal() {
+  document.getElementById('publish-modal').style.display = 'none';
+}
+
+async function submitPublish() {
+  const btn = document.getElementById('btn-publish-now');
+  const statusEl = document.getElementById('pub-status-msg');
+  const titles = pubState.clip?.titles || ['Sin título'];
+  const title = titles[pubState.selectedTitle] || titles[0];
+  const hashtags = document.getElementById('pub-hashtags-display').textContent;
+  // Use the editable textarea content as final caption
+  const fullCaption = document.getElementById('pub-caption-preview').value.trim();
+
+  const dateVal = document.getElementById('pub-date').value;
+  const timeVal = document.getElementById('pub-time').value === 'custom'
+    ? document.getElementById('pub-custom-time').value
+    : document.getElementById('pub-time').value;
+  if (!dateVal) return showToast('Selecciona una fecha');
+
+  const scheduledAt = new Date(`${dateVal}T${timeVal}:00`);
+  // Convert ET to UTC (ET = UTC-5 standard, UTC-4 DST — use fixed offset for simplicity)
+  const etOffsetMs = 5 * 60 * 60 * 1000; // EST
+  const scheduledISO = new Date(scheduledAt.getTime() + etOffsetMs).toISOString();
+
+  btn.disabled = true;
+  statusEl.style.color = 'var(--t2)';
+  statusEl.textContent = '⏳ Programando en Buffer…';
+
+  try {
+    const res = await fetch('/api/publish-clip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jobId: pubState.jobId,
+        clipIndex: pubState.clipIndex,
+        title: fullCaption, // full editable caption used as-is
+        hashtags: '',       // already included in fullCaption
+        scheduledAt: scheduledISO,
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || 'Error al publicar');
+    if (data.savedAsDraft) {
+      statusEl.style.color = 'var(--yellow)';
+      statusEl.textContent = '📝 Guardado como borrador en Buffer. Abre Buffer → Drafts, adjunta el video y publica.';
+      showToast('📝 Borrador guardado en Buffer — adjunta el video manualmente');
+      btn.disabled = false;
+    } else {
+      statusEl.style.color = 'var(--green)';
+      statusEl.textContent = '✅ ¡Programado en Buffer con éxito!';
+      showToast('¡Post programado en TikTok! 🎵');
+      setTimeout(closePublishModal, 2200);
+    }
+  } catch (e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = `❌ ${e.message}`;
+    btn.disabled = false;
+  }
+}
+
+// ── THEME TOGGLE ──
+const THEME_KEY = 'cf_theme';
+function applyTheme(mode) {
+  const isLight = mode === 'light';
+  document.documentElement.classList.toggle('light', isLight);
+  const btn = document.getElementById('btn-theme');
+  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem(THEME_KEY, mode);
+}
+function toggleTheme() {
+  const current = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
+// Load saved theme on start
+applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+
+// Init
+switchPage('dashboard');
+
+setInterval(async ()=>{
+  const hasRunning=Object.values(state.jobs).some(j=>j.status==='running'||j.status==='queued');
+  if(!hasRunning) return;
+  try {
+    const res = await fetch('/api/jobs'); if(!res.ok) return;
+    const jobs = await res.json();
+    jobs.forEach(j => {
+      const prev = state.jobs[j.id];
+      if(!prev || prev.status==='running' || prev.status==='queued') {
+        state.jobs[j.id] = j; renderJob(j.id);
+      }
+    });
+    const dot=document.getElementById('jobs-status-dot');
+    const running=jobs.filter(j=>j.status==='running'||j.status==='queued').length;
+    if(dot) dot.textContent=running?`⚙️ ${running} procesando…`:`${jobs.length} trabajos`;
+  } catch(e) {}
+}, 4000);
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+node_modules/
+.env
+clips/
+dubbing/
+output/
+jobs.json
+heygen_jobs.json
+cookies.txt
+users.json
+creators.json
+*.log
